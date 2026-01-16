@@ -18,6 +18,7 @@
         .channel-card { transition: all 0.3s ease; }
         .channel-card:hover { transform: translateY(-2px); }
         .momentum-bar { background: linear-gradient(90deg, #ef4444 0%, #f97316 25%, #eab308 50%, #22c55e 75%, #06b6d4 100%); }
+        .progress-bar { background: linear-gradient(90deg, #6366f1, #a855f7); }
         .modal-backdrop { animation: fadeIn 0.2s ease-out; }
         .modal-content { animation: slideUp 0.3s ease-out; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -25,6 +26,7 @@
         .video-card:hover { background: rgba(34, 211, 238, 0.1); }
         .scrollbar-thin::-webkit-scrollbar { width: 6px; }
         .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.3); border-radius: 3px; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; margin: 2px; }
     </style>
 </head>
 <body class="text-white">
@@ -48,6 +50,12 @@
             Fire: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" /></svg>,
             Chart: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>,
             Star: () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>,
+            Heart: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>,
+            MessageCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
+            Target: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth={2}/><circle cx="12" cy="12" r="6" strokeWidth={2}/><circle cx="12" cy="12" r="2" strokeWidth={2}/></svg>,
+            Zap: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
+            Film: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" /></svg>,
+            Tag: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
         };
 
         const formatNumber = (num) => {
@@ -60,6 +68,17 @@
         const formatDate = (dateStr) => {
             if (!dateStr || dateStr === 'No Videos') return 'No Videos';
             return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        };
+
+        const formatDuration = (seconds) => {
+            if (!seconds) return 'Unknown';
+            if (seconds < 60) return `${seconds}s`;
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            if (mins < 60) return `${mins}m ${secs}s`;
+            const hours = Math.floor(mins / 60);
+            const remainMins = mins % 60;
+            return `${hours}h ${remainMins}m`;
         };
 
         const getChannelAge = (days) => {
@@ -87,6 +106,14 @@
             return { label: 'Warming Up', color: 'text-slate-400', bg: 'bg-slate-500/20' };
         };
 
+        const getConsistencyLabel = (score) => {
+            if (score >= 80) return { label: 'Very Consistent', color: 'text-green-400' };
+            if (score >= 60) return { label: 'Consistent', color: 'text-cyan-400' };
+            if (score >= 40) return { label: 'Moderate', color: 'text-yellow-400' };
+            if (score >= 20) return { label: 'Irregular', color: 'text-orange-400' };
+            return { label: 'Erratic', color: 'text-red-400' };
+        };
+
         const getMonetizationBadge = (subs) => {
             if (subs >= 1000000) return { label: '1M+', color: 'from-yellow-400 to-amber-600', icon: '👑' };
             if (subs >= 100000) return { label: '100K', color: 'from-purple-400 to-pink-600', icon: '💎' };
@@ -99,10 +126,11 @@
             if (!channel) return null;
             const badge = getMonetizationBadge(channel.subscribers);
             const momentum = getMomentumLabel(channel.momentumScore || 0);
+            const consistency = getConsistencyLabel(channel.consistencyScore || 0);
 
             return (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" style={{ backgroundColor: 'rgba(0,0,0,0.85)' }} onClick={onClose}>
-                    <div className="modal-content glass-strong rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+                    <div className="modal-content glass-strong rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
                         {/* Header with banner */}
                         <div className="relative h-40 bg-gradient-to-br from-cyan-900/50 to-purple-900/50">
                             {channel.bannerUrl && <img src={channel.bannerUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40"/>}
@@ -125,6 +153,17 @@
 
                         {/* Content */}
                         <div className="p-6 overflow-y-auto max-h-[calc(90vh-10rem)] scrollbar-thin">
+                            {/* Topic Categories */}
+                            {channel.topicCategories && channel.topicCategories.length > 0 && (
+                                <div className="mb-4 flex flex-wrap items-center gap-1">
+                                    <Icons.Tag />
+                                    {channel.topicCategories.map((topic, idx) => (
+                                        <span key={idx} className="tag bg-purple-500/20 text-purple-300">{topic}</span>
+                                    ))}
+                                    {channel.madeForKids && <span className="tag bg-yellow-500/20 text-yellow-300">Kids Content</span>}
+                                </div>
+                            )}
+
                             {/* Stats Grid */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                                 <div className="glass rounded-xl p-4 text-center">
@@ -145,8 +184,27 @@
                                 </div>
                             </div>
 
+                            {/* Milestone Progress (if not yet at 1M) */}
+                            {channel.nextMilestone && (
+                                <div className="glass rounded-xl p-4 mb-6">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <span className="flex items-center gap-2 text-slate-300">
+                                            <Icons.Target />
+                                            Next Milestone: <span className="font-bold text-white">{formatNumber(channel.nextMilestone)}</span>
+                                        </span>
+                                        <span className="text-cyan-400 font-medium">{channel.milestoneProgressPct}%</span>
+                                    </div>
+                                    <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
+                                        <div className="h-full progress-bar rounded-full transition-all" style={{ width: `${channel.milestoneProgressPct}%` }}/>
+                                    </div>
+                                    {channel.daysToYPP > 0 && channel.subscribers < 1000 && (
+                                        <p className="text-sm text-slate-400 mt-2">Estimated {channel.daysToYPP} days to YPP eligibility based on current growth</p>
+                                    )}
+                                </div>
+                            )}
+
                             <div className="grid md:grid-cols-2 gap-6">
-                                {/* Left - Channel Insights */}
+                                {/* Left Column */}
                                 <div className="space-y-4">
                                     <h3 className="text-lg font-semibold flex items-center gap-2"><Icons.Chart /> Channel Insights</h3>
                                     <div className="glass rounded-xl p-4 space-y-3">
@@ -154,6 +212,30 @@
                                         <div className="flex justify-between"><span className="text-slate-400 flex items-center gap-2"><Icons.Globe /> Country</span><span>{channel.country || 'Unknown'}</span></div>
                                         <div className="flex justify-between"><span className="text-slate-400 flex items-center gap-2"><Icons.Clock /> Upload Frequency</span><span>{getUploadFrequency(channel.uploadFrequencyDays)}</span></div>
                                         <div className="flex justify-between"><span className="text-slate-400 flex items-center gap-2"><Icons.Video /> Last Upload</span><span>{formatDate(channel.lastVideoDate)}</span></div>
+                                        <div className="flex justify-between"><span className="text-slate-400 flex items-center gap-2"><Icons.Zap /> Consistency</span><span className={consistency.color}>{consistency.label}</span></div>
+                                    </div>
+
+                                    {/* Content Mix */}
+                                    <div className="glass rounded-xl p-4">
+                                        <h4 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2"><Icons.Film /> Content Mix</h4>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <div className="text-lg font-bold text-pink-400">{channel.shortsCount || 0}</div>
+                                                <div className="text-xs text-slate-500">Shorts (&lt;60s)</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-lg font-bold text-blue-400">{channel.longFormCount || 0}</div>
+                                                <div className="text-xs text-slate-500">Long Form</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-lg font-bold text-cyan-400">{channel.shortsPercentage || 0}%</div>
+                                                <div className="text-xs text-slate-500">Shorts Ratio</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-lg font-bold text-purple-400">{formatDuration(channel.avgVideoDurationSec)}</div>
+                                                <div className="text-xs text-slate-500">Avg Duration</div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     {/* Momentum Score */}
@@ -168,19 +250,42 @@
                                         <div className="flex justify-between text-xs text-slate-500 mt-1"><span>0</span><span>{channel.momentumScore || 0}/100</span></div>
                                     </div>
 
+                                    {/* Engagement Stats */}
+                                    <div className="glass rounded-xl p-4">
+                                        <h4 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2"><Icons.Heart /> Engagement</h4>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <div className="text-lg font-bold text-red-400">{channel.avgLikeRatio || 0}%</div>
+                                                <div className="text-xs text-slate-500">Avg Like Ratio</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-lg font-bold text-blue-400">{formatNumber(channel.avgCommentCount || 0)}</div>
+                                                <div className="text-xs text-slate-500">Avg Comments</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-lg font-bold text-cyan-400">{channel.viewsPerSub || 0}x</div>
+                                                <div className="text-xs text-slate-500">Views per Sub</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-lg font-bold text-amber-400">{channel.topVideoMultiplier || 0}x</div>
+                                                <div className="text-xs text-slate-500">Top Video vs Avg</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     {/* Growth Stats */}
                                     <div className="glass rounded-xl p-4">
-                                        <h4 className="text-sm font-medium text-slate-400 mb-3">Growth & Efficiency</h4>
+                                        <h4 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2"><Icons.TrendingUp /> Growth</h4>
                                         <div className="grid grid-cols-2 gap-3">
                                             <div><div className={`text-lg font-bold ${channel.weekGrowth > 0 ? 'text-green-400' : 'text-slate-400'}`}>{channel.weekGrowth > 0 ? '+' : ''}{channel.weekGrowth || 0}%</div><div className="text-xs text-slate-500">Weekly Growth</div></div>
                                             <div><div className={`text-lg font-bold ${channel.monthGrowth > 0 ? 'text-green-400' : 'text-slate-400'}`}>{channel.monthGrowth > 0 ? '+' : ''}{channel.monthGrowth || 0}%</div><div className="text-xs text-slate-500">Monthly Growth</div></div>
-                                            <div><div className="text-lg font-bold text-cyan-400">{channel.viewsPerSub || 0}x</div><div className="text-xs text-slate-500">Views per Sub</div></div>
                                             <div><div className="text-lg font-bold text-purple-400">{formatNumber(channel.estMonthlyViews || 0)}</div><div className="text-xs text-slate-500">Est. Monthly Views</div></div>
+                                            <div><div className="text-lg font-bold text-cyan-400">{channel.subsPerVideo || 0}</div><div className="text-xs text-slate-500">Subs per Video</div></div>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Right - Videos */}
+                                {/* Right Column - Videos */}
                                 <div className="space-y-4">
                                     {channel.topVideo && (
                                         <>
@@ -217,15 +322,15 @@
                                             </div>
                                         </>
                                     )}
+
+                                    {channel.description && (
+                                        <div className="glass rounded-xl p-4 mt-4">
+                                            <h3 className="text-lg font-semibold mb-2">About</h3>
+                                            <p className="text-slate-300 text-sm whitespace-pre-line line-clamp-6">{channel.description}</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-
-                            {channel.description && (
-                                <div className="glass rounded-xl p-4 mt-6">
-                                    <h3 className="text-lg font-semibold mb-2">About</h3>
-                                    <p className="text-slate-300 text-sm whitespace-pre-line line-clamp-4">{channel.description}</p>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -244,10 +349,6 @@
             React.useEffect(() => {
                 const fetchData = async () => {
                     try {
-                        if (!CONFIG.APPS_SCRIPT_URL.includes('script.google.com')) {
-                            setLoading(false);
-                            return;
-                        }
                         const response = await fetch(CONFIG.APPS_SCRIPT_URL);
                         const data = await response.json();
                         setChannels(data.channels || []);
@@ -265,10 +366,15 @@
                 let filtered = channels;
                 if (searchTerm) {
                     const term = searchTerm.toLowerCase();
-                    filtered = filtered.filter(c => c.channelName?.toLowerCase().includes(term) || c.friend?.toLowerCase().includes(term));
+                    filtered = filtered.filter(c => 
+                        c.channelName?.toLowerCase().includes(term) || 
+                        c.friend?.toLowerCase().includes(term) ||
+                        c.topicCategories?.some(t => t.toLowerCase().includes(term))
+                    );
                 }
                 if (filterStatus === 'monetized') filtered = filtered.filter(c => c.isMonetized);
                 else if (filterStatus === 'active') filtered = filtered.filter(c => c.status === 'Active');
+                else if (filterStatus === 'shorts') filtered = filtered.filter(c => c.shortsPercentage >= 50);
 
                 filtered.sort((a, b) => {
                     switch (sortBy) {
@@ -276,6 +382,8 @@
                         case 'views': return (b.views || 0) - (a.views || 0);
                         case 'growth': return (b.weekGrowth || 0) - (a.weekGrowth || 0);
                         case 'momentum': return (b.momentumScore || 0) - (a.momentumScore || 0);
+                        case 'consistency': return (b.consistencyScore || 0) - (a.consistencyScore || 0);
+                        case 'engagement': return (b.avgLikeRatio || 0) - (a.avgLikeRatio || 0);
                         case 'name': return (a.channelName || '').localeCompare(b.channelName || '');
                         default: return 0;
                     }
@@ -309,19 +417,22 @@
                     <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row gap-4">
                         <div className="flex-1 relative">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Icons.Search /></div>
-                            <input type="text" placeholder="Search channels or creators..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-12 pr-4 py-3 glass rounded-xl bg-transparent outline-none placeholder-slate-500 focus:ring-2 focus:ring-cyan-500/50"/>
+                            <input type="text" placeholder="Search channels, creators, or topics..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-12 pr-4 py-3 glass rounded-xl bg-transparent outline-none placeholder-slate-500 focus:ring-2 focus:ring-cyan-500/50"/>
                         </div>
                         <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="px-4 py-3 glass rounded-xl bg-slate-900 outline-none cursor-pointer">
                             <option value="subscribers">Sort by Subscribers</option>
                             <option value="views">Sort by Views</option>
                             <option value="growth">Sort by Growth</option>
                             <option value="momentum">Sort by Momentum</option>
+                            <option value="consistency">Sort by Consistency</option>
+                            <option value="engagement">Sort by Engagement</option>
                             <option value="name">Sort by Name</option>
                         </select>
                         <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="px-4 py-3 glass rounded-xl bg-slate-900 outline-none cursor-pointer">
                             <option value="all">All Channels</option>
                             <option value="monetized">Monetized Only</option>
                             <option value="active">Active Only</option>
+                            <option value="shorts">Shorts Creators</option>
                         </select>
                     </div>
 
