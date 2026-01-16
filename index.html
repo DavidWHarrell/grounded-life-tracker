@@ -13,6 +13,9 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Chart.js for growth charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
@@ -23,83 +26,128 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
         
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-            width: 12px;
-        }
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 6px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
         
-        ::-webkit-scrollbar-track {
-            background: #0f172a;
-        }
+        * { transition: border-color 0.2s ease, background-color 0.2s ease; }
         
-        ::-webkit-scrollbar-thumb {
-            background: #334155;
-            border-radius: 6px;
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1s linear infinite; }
         
-        ::-webkit-scrollbar-thumb:hover {
-            background: #475569;
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .channel-card { animation: fadeIn 0.5s ease forwards; }
         
-        /* Smooth animations */
-        * {
-            transition: border-color 0.2s ease, background-color 0.2s ease;
-        }
-        
-        /* Loading animation */
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        .animate-spin {
-            animation: spin 1s linear infinite;
-        }
-        
-        /* Fade in animation */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .channel-card {
-            animation: fadeIn 0.5s ease forwards;
-        }
+        @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 500px; } }
+        .expand-content { animation: slideDown 0.3s ease forwards; }
     </style>
 </head>
 <body>
     <div id="root"></div>
     
     <script type="text/babel">
-        const { useState, useEffect } = React;
+        const { useState, useEffect, useRef } = React;
         
-        // Configuration - YOUR WEB APP URL IS ALREADY CONFIGURED BELOW
         const CONFIG = {
             APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzGNre2wKuviemHWhOiptsjWh8lnTGUV103R13moHGWAeCY8XBrnMh0MXgZy27J0sWW/exec',
-            USE_MOCK_DATA: false  // Set to false to use real data from your Google Sheet
+            USE_MOCK_DATA: false
         };
         
-        // Icons from Lucide (initialize after DOM loads)
         const Icons = {
-            Search: () => <svg className="lucide lucide-search" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>,
-            TrendingUp: () => <svg className="lucide lucide-trending-up" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>,
-            Award: () => <svg className="lucide lucide-award" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15l-2 5 2 1 2-1-2-5zm0 0c-1.5-1.5-3-3-3-5.5A3.5 3.5 0 0112 6a3.5 3.5 0 013 3.5c0 2.5-1.5 4-3 5.5z"></path></svg>,
-            Users: () => <svg className="lucide lucide-users" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"></path></svg>,
-            Video: () => <svg className="lucide lucide-video" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M23 7l-7 5 7 5V7zM14 5H3a2 2 0 00-2 2v10a2 2 0 002 2h11a2 2 0 002-2V7a2 2 0 00-2-2z"></path></svg>,
-            Eye: () => <svg className="lucide lucide-eye" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>,
-            Calendar: () => <svg className="lucide lucide-calendar" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zM16 2v4M8 2v4M3 10h18"></path></svg>,
-            ChevronDown: () => <svg className="lucide lucide-chevron-down" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 9l6 6 6-6"></path></svg>,
-            Filter: () => <svg className="lucide lucide-filter" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></svg>,
-            ExternalLink: () => <svg className="lucide lucide-external-link" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"></path></svg>
+            Search: () => <svg className="lucide" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>,
+            TrendingUp: () => <svg className="lucide" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>,
+            TrendingDown: () => <svg className="lucide" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path></svg>,
+            Award: () => <svg className="lucide" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15l-2 5 2 1 2-1-2-5zm0 0c-1.5-1.5-3-3-3-5.5A3.5 3.5 0 0112 6a3.5 3.5 0 013 3.5c0 2.5-1.5 4-3 5.5z"></path></svg>,
+            Users: () => <svg className="lucide" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"></path></svg>,
+            Video: () => <svg className="lucide" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M23 7l-7 5 7 5V7zM14 5H3a2 2 0 00-2 2v10a2 2 0 002 2h11a2 2 0 002-2V7a2 2 0 00-2-2z"></path></svg>,
+            Eye: () => <svg className="lucide" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>,
+            Calendar: () => <svg className="lucide" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zM16 2v4M8 2v4M3 10h18"></path></svg>,
+            ChevronDown: () => <svg className="lucide" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 9l6 6 6-6"></path></svg>,
+            Filter: () => <svg className="lucide" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></svg>,
+            ExternalLink: () => <svg className="lucide" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"></path></svg>,
+            Zap: () => <svg className="lucide" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"></path></svg>,
+            Target: () => <svg className="lucide" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>,
+            ChevronRight: () => <svg className="lucide" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 18l6-6-6-6"></path></svg>
         };
+        
+        function GrowthChart({ history, channelName }) {
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
+            
+            useEffect(() => {
+                if (!chartRef.current || !history || history.length === 0) return;
+                
+                if (chartInstance.current) {
+                    chartInstance.current.destroy();
+                }
+                
+                const ctx = chartRef.current.getContext('2d');
+                const sortedHistory = [...history].sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                chartInstance.current = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: sortedHistory.map(h => new Date(h.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                        datasets: [{
+                            label: 'Subscribers',
+                            data: sortedHistory.map(h => h.subscribers),
+                            borderColor: 'rgb(6, 182, 212)',
+                            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                            },
+                            x: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+                
+                return () => {
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+                };
+            }, [history]);
+            
+            if (!history || history.length === 0) {
+                return (
+                    <div className="text-center py-8 text-slate-500">
+                        No historical data yet. Check back after the first weekly snapshot!
+                    </div>
+                );
+            }
+            
+            return <canvas ref={chartRef} height="200"></canvas>;
+        }
         
         function GroundedLifeTracker() {
             const [channels, setChannels] = useState([]);
             const [stats, setStats] = useState(null);
+            const [trendingChannels, setTrendingChannels] = useState([]);
+            const [recentMilestones, setRecentMilestones] = useState([]);
             const [loading, setLoading] = useState(true);
             const [searchTerm, setSearchTerm] = useState('');
             const [sortBy, setSortBy] = useState('subscribers');
             const [filterStatus, setFilterStatus] = useState('all');
             const [showFilters, setShowFilters] = useState(false);
+            const [expandedChannel, setExpandedChannel] = useState(null);
             const [lastUpdated, setLastUpdated] = useState(null);
             
             useEffect(() => {
@@ -113,6 +161,8 @@
                     const data = await response.json();
                     setChannels(data.channels || []);
                     setStats(data.stats || {});
+                    setTrendingChannels(data.trendingChannels || []);
+                    setRecentMilestones(data.recentMilestones || []);
                     setLastUpdated(new Date(data.lastUpdated));
                     setLoading(false);
                 } catch (error) {
@@ -128,23 +178,19 @@
                     const matchesFilter = filterStatus === 'all' ||
                                         (filterStatus === 'monetized' && channel.isMonetized) ||
                                         (filterStatus === 'active' && channel.status === 'Active') ||
-                                        (filterStatus === 'inactive' && channel.status !== 'Active');
+                                        (filterStatus === 'inactive' && channel.status !== 'Active') ||
+                                        (filterStatus === 'trending' && channel.weekGrowth > 0);
                     return matchesSearch && matchesFilter;
                 })
                 .sort((a, b) => {
                     switch (sortBy) {
-                        case 'subscribers':
-                            return b.subscribers - a.subscribers;
-                        case 'views':
-                            return b.views - a.views;
-                        case 'videos':
-                            return b.videos - a.videos;
-                        case 'recent':
-                            return new Date(b.lastVideoDate) - new Date(a.lastVideoDate);
-                        case 'name':
-                            return a.friend.localeCompare(b.friend);
-                        default:
-                            return 0;
+                        case 'subscribers': return b.subscribers - a.subscribers;
+                        case 'views': return b.views - a.views;
+                        case 'videos': return b.videos - a.videos;
+                        case 'growth': return b.weekGrowth - a.weekGrowth;
+                        case 'recent': return new Date(b.lastVideoDate) - new Date(a.lastVideoDate);
+                        case 'name': return a.friend.localeCompare(b.friend);
+                        default: return 0;
                     }
                 });
             
@@ -197,7 +243,7 @@
                         <div className="relative max-w-7xl mx-auto px-6 py-16">
                             <div className="flex items-center gap-4 mb-6">
                                 <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-cyan-500/30">
-                                    <Icons.Users />
+                                    <div className="w-9 h-9"><Icons.Users /></div>
                                 </div>
                                 <div>
                                     <h1 className="text-5xl font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
@@ -252,6 +298,57 @@
                                 </div>
                             )}
                             
+                            {/* Trending Section */}
+                            {trendingChannels.length > 0 && (
+                                <div className="mb-8 bg-gradient-to-br from-amber-900/20 to-orange-900/20 backdrop-blur-sm rounded-xl p-6 border border-amber-700/30">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-8 h-8 text-amber-400"><Icons.Zap /></div>
+                                        <h2 className="text-2xl font-black text-amber-400">🔥 Trending This Week</h2>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                        {trendingChannels.slice(0, 6).map((channel, idx) => (
+                                            <div key={idx} className="bg-slate-900/50 rounded-lg p-4 border border-amber-700/20 hover:border-amber-600/40 transition-all">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="text-2xl font-black text-amber-400">#{idx + 1}</div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-sm font-bold text-white truncate">{channel.channelName}</div>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <div className="w-3 h-3 text-green-400"><Icons.TrendingUp /></div>
+                                                            <span className="text-green-400 font-bold text-sm">+{channel.weekGrowth}%</span>
+                                                            <span className="text-slate-500 text-xs">({channel.weekSubsChange > 0 ? '+' : ''}{channel.weekSubsChange} subs)</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Recent Milestones */}
+                            {recentMilestones.length > 0 && (
+                                <div className="mb-8 bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-sm rounded-xl p-6 border border-purple-700/30">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-8 h-8 text-purple-400"><Icons.Target /></div>
+                                        <h2 className="text-2xl font-black text-purple-400">🎉 Recent Milestones</h2>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {recentMilestones.slice(0, 5).map((milestone, idx) => (
+                                            <div key={idx} className="bg-slate-900/50 rounded-lg p-4 border border-purple-700/20 flex items-center gap-4">
+                                                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                                    <div className="w-5 h-5 text-white"><Icons.Award /></div>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="font-bold text-white">{milestone.channelName}</div>
+                                                    <div className="text-sm text-slate-400">{milestone.friendName} reached {formatNumber(milestone.value)} {milestone.type.toLowerCase()}</div>
+                                                </div>
+                                                <div className="text-xs text-slate-500">{getDaysAgo(milestone.date)}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            
                             {/* Search and Filter */}
                             <div className="flex flex-col md:flex-row gap-4">
                                 <div className="flex-1 relative">
@@ -291,6 +388,7 @@
                                                 className="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20"
                                             >
                                                 <option value="subscribers">Most Subscribers</option>
+                                                <option value="growth">Fastest Growing</option>
                                                 <option value="views">Most Views</option>
                                                 <option value="videos">Most Videos</option>
                                                 <option value="recent">Most Recent Upload</option>
@@ -306,6 +404,7 @@
                                                 className="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20"
                                             >
                                                 <option value="all">All Channels</option>
+                                                <option value="trending">Trending (Growing)</option>
                                                 <option value="monetized">Monetized Only</option>
                                                 <option value="active">Active Only</option>
                                                 <option value="inactive">Inactive</option>
@@ -335,6 +434,7 @@
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {filteredAndSortedChannels.map((channel, index) => {
                                 const badge = getMonetizationBadge(channel.subscribers);
+                                const isExpanded = expandedChannel === channel.channelId;
                                 
                                 return (
                                     <div
@@ -379,7 +479,7 @@
                                                     </div>
                                                     <p className="text-slate-400 text-sm mb-2">{channel.friend}</p>
                                                     
-                                                    <div className="flex items-center gap-2 text-xs">
+                                                    <div className="flex items-center gap-2 text-xs flex-wrap">
                                                         <span className={`px-2 py-1 rounded-md font-semibold ${
                                                             channel.status === 'Active'
                                                                 ? 'bg-green-900/30 text-green-400 border border-green-700/30'
@@ -390,6 +490,18 @@
                                                         {channel.isMature && (
                                                             <span className="px-2 py-1 rounded-md font-semibold bg-purple-900/30 text-purple-400 border border-purple-700/30">
                                                                 Mature
+                                                            </span>
+                                                        )}
+                                                        {channel.weekGrowth > 0 && (
+                                                            <span className="px-2 py-1 rounded-md font-semibold bg-green-900/30 text-green-400 border border-green-700/30 flex items-center gap-1">
+                                                                <div className="w-3 h-3"><Icons.TrendingUp /></div>
+                                                                +{channel.weekGrowth}%
+                                                            </span>
+                                                        )}
+                                                        {channel.weekGrowth < 0 && (
+                                                            <span className="px-2 py-1 rounded-md font-semibold bg-red-900/30 text-red-400 border border-red-700/30 flex items-center gap-1">
+                                                                <div className="w-3 h-3"><Icons.TrendingDown /></div>
+                                                                {channel.weekGrowth}%
                                                             </span>
                                                         )}
                                                     </div>
@@ -404,6 +516,11 @@
                                                         <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">Subs</span>
                                                     </div>
                                                     <div className="text-lg font-black text-white">{formatNumber(channel.subscribers)}</div>
+                                                    {channel.weekSubsChange !== 0 && (
+                                                        <div className={`text-xs font-semibold ${channel.weekSubsChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                            {channel.weekSubsChange > 0 ? '+' : ''}{formatNumber(channel.weekSubsChange)} this week
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 
                                                 <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700/30">
@@ -424,11 +541,42 @@
                                             </div>
                                             
                                             {/* Last Upload */}
-                                            <div className="flex items-center gap-2 text-sm">
-                                                <div className="w-4 h-4 text-slate-500"><Icons.Calendar /></div>
-                                                <span className="text-slate-400">Last upload:</span>
-                                                <span className="text-slate-300 font-medium">{getDaysAgo(channel.lastVideoDate)}</span>
+                                            <div className="flex items-center justify-between gap-2 text-sm mb-4">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-4 h-4 text-slate-500"><Icons.Calendar /></div>
+                                                    <span className="text-slate-400">Last upload:</span>
+                                                    <span className="text-slate-300 font-medium">{getDaysAgo(channel.lastVideoDate)}</span>
+                                                </div>
+                                                
+                                                {channel.history && channel.history.length > 0 && (
+                                                    <button
+                                                        onClick={() => setExpandedChannel(isExpanded ? null : channel.channelId)}
+                                                        className="text-cyan-400 hover:text-cyan-300 text-xs font-semibold flex items-center gap-1 transition-colors"
+                                                    >
+                                                        {isExpanded ? 'Hide' : 'View'} Growth
+                                                        <div className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
+                                                            <Icons.ChevronRight />
+                                                        </div>
+                                                    </button>
+                                                )}
                                             </div>
+                                            
+                                            {/* Expanded Growth Chart */}
+                                            {isExpanded && (
+                                                <div className="expand-content border-t border-slate-700/50 pt-4 mt-4">
+                                                    <h4 className="text-sm font-bold text-cyan-400 mb-3">Subscriber Growth</h4>
+                                                    <GrowthChart history={channel.history} channelName={channel.channelName} />
+                                                    
+                                                    {channel.monthGrowth !== 0 && (
+                                                        <div className="mt-4 text-center">
+                                                            <span className="text-slate-400 text-sm">30-day growth: </span>
+                                                            <span className={`font-bold ${channel.monthGrowth > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                                {channel.monthGrowth > 0 ? '+' : ''}{channel.monthGrowth}%
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 );
@@ -467,7 +615,6 @@
             );
         }
         
-        // Render the app
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<GroundedLifeTracker />);
     </script>
