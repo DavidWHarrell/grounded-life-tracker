@@ -289,7 +289,7 @@
                                 <div className="space-y-4">
                                     {channel.topVideo && (
                                         <>
-                                            <h3 className="text-lg font-semibold flex items-center gap-2"><Icons.Star /> Most Viewed Video</h3>
+                                            <h3 className="text-lg font-semibold flex items-center gap-2"><Icons.Star /> Top Recent Video</h3>
                                             <a href={`https://www.youtube.com/watch?v=${channel.topVideo.videoId}`} target="_blank" rel="noopener noreferrer" className="block glass rounded-xl overflow-hidden video-card">
                                                 <div className="relative">
                                                     <img src={`https://img.youtube.com/vi/${channel.topVideo.videoId}/mqdefault.jpg`} alt={channel.topVideo.title} className="w-full aspect-video object-cover"/>
