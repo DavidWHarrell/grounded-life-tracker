@@ -3,569 +3,706 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grounded Life YouTube Community</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <title>Grounded Life - YouTube Community Showcase</title>
+    
+    <!-- React and Babel -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js for growth charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
     <style>
-        * { font-family: 'Outfit', sans-serif; }
-        body { background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%); min-height: 100vh; }
-        .glass { background: rgba(255,255,255,0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.08); }
-        .glass-strong { background: rgba(15,23,42,0.95); backdrop-filter: blur(40px); border: 1px solid rgba(255,255,255,0.1); }
-        .gradient-text { background: linear-gradient(135deg, #22d3ee, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .channel-card { transition: all 0.3s ease; }
-        .channel-card:hover { transform: translateY(-2px); }
-        .momentum-bar { background: linear-gradient(90deg, #ef4444 0%, #f97316 25%, #eab308 50%, #22c55e 75%, #06b6d4 100%); }
-        .progress-bar { background: linear-gradient(90deg, #6366f1, #a855f7); }
-        .modal-backdrop { animation: fadeIn 0.2s ease-out; }
-        .modal-content { animation: slideUp 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .video-card:hover { background: rgba(34, 211, 238, 0.1); }
-        .scrollbar-thin::-webkit-scrollbar { width: 6px; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(34, 211, 238, 0.3); border-radius: 3px; }
-        .tag { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; margin: 2px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+        
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 6px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        
+        * { transition: border-color 0.2s ease, background-color 0.2s ease; }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .animate-spin { animation: spin 1s linear infinite; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .channel-card { animation: fadeIn 0.5s ease forwards; }
+        
+        @keyframes slideDown { from { opacity: 0; max-height: 0; } to { opacity: 1; max-height: 500px; } }
+        .expand-content { animation: slideDown 0.3s ease forwards; }
     </style>
 </head>
-<body class="text-white">
+<body>
     <div id="root"></div>
+    
     <script type="text/babel">
-        const CONFIG = { APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzGNre2wKuviemHWhOiptsjWh8lnTGUV103R13moHGWAeCY8XBrnMh0MXgZy27J0sWW/exec' };
-
+        const { useState, useEffect, useRef } = React;
+        
+        const CONFIG = {
+            APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzGNre2wKuviemHWhOiptsjWh8lnTGUV103R13moHGWAeCY8XBrnMh0MXgZy27J0sWW/exec',
+            USE_MOCK_DATA: false
+        };
+        
         const Icons = {
-            Help: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-            Search: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>,
-            Users: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
-            Video: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>,
-            Eye: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>,
-            TrendingUp: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>,
-            Award: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>,
-            Calendar: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>,
-            ExternalLink: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>,
-            Close: () => <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>,
-            Play: () => <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>,
-            Globe: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth={2}/><path strokeLinecap="round" strokeWidth={2} d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>,
-            Clock: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
-            Fire: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" /></svg>,
-            Chart: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>,
-            Star: () => <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>,
-            Heart: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>,
-            MessageCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>,
-            Target: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" strokeWidth={2}/><circle cx="12" cy="12" r="6" strokeWidth={2}/><circle cx="12" cy="12" r="2" strokeWidth={2}/></svg>,
-            Zap: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>,
-            Film: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" /></svg>,
-            Tag: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>,
+            Search: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>,
+            TrendingUp: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>,
+            TrendingDown: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path></svg>,
+            Award: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15l-2 5 2 1 2-1-2-5zm0 0c-1.5-1.5-3-3-3-5.5A3.5 3.5 0 0112 6a3.5 3.5 0 013 3.5c0 2.5-1.5 4-3 5.5z"></path></svg>,
+            Users: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"></path></svg>,
+            Video: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M23 7l-7 5 7 5V7zM14 5H3a2 2 0 00-2 2v10a2 2 0 002 2h11a2 2 0 002-2V7a2 2 0 00-2-2z"></path></svg>,
+            Eye: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>,
+            Calendar: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 4H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V6a2 2 0 00-2-2zM16 2v4M8 2v4M3 10h18"></path></svg>,
+            ChevronDown: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 9l6 6 6-6"></path></svg>,
+            Filter: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"></path></svg>,
+            ExternalLink: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"></path></svg>,
+            Zap: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"></path></svg>,
+            Target: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>,
+            ChevronRight: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 18l6-6-6-6"></path></svg>,
+            X: () => <svg className="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         };
-
-        const formatNumber = (num) => {
-            if (!num) return '0';
-            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-            return num.toLocaleString();
-        };
-
-        const formatDate = (dateStr) => {
-            if (!dateStr || dateStr === 'No Videos') return 'No Videos';
-            return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        };
-
-        const formatDuration = (seconds) => {
-            if (!seconds) return 'Unknown';
-            if (seconds < 60) return `${seconds}s`;
-            const mins = Math.floor(seconds / 60);
-            const secs = seconds % 60;
-            if (mins < 60) return `${mins}m ${secs}s`;
-            const hours = Math.floor(mins / 60);
-            const remainMins = mins % 60;
-            return `${hours}h ${remainMins}m`;
-        };
-
-        const getChannelAge = (days) => {
-            if (!days) return 'Unknown';
-            const years = Math.floor(days / 365);
-            const months = Math.floor((days % 365) / 30);
-            return years > 0 ? `${years}y ${months}m` : `${months} months`;
-        };
-
-        const getUploadFrequency = (days) => {
-            if (!days) return 'Unknown';
-            if (days <= 1) return 'Daily';
-            if (days <= 3) return 'Every few days';
-            if (days <= 7) return 'Weekly';
-            if (days <= 14) return 'Bi-weekly';
-            if (days <= 30) return 'Monthly';
-            return 'Infrequent';
-        };
-
-        const getMomentumLabel = (score) => {
-            if (score >= 80) return { label: 'On Fire', color: 'text-orange-400', bg: 'bg-orange-500/20' };
-            if (score >= 60) return { label: 'Strong', color: 'text-green-400', bg: 'bg-green-500/20' };
-            if (score >= 40) return { label: 'Steady', color: 'text-cyan-400', bg: 'bg-cyan-500/20' };
-            if (score >= 20) return { label: 'Building', color: 'text-yellow-400', bg: 'bg-yellow-500/20' };
-            return { label: 'Warming Up', color: 'text-slate-400', bg: 'bg-slate-500/20' };
-        };
-
-        const getConsistencyLabel = (score) => {
-            if (score >= 80) return { label: 'Very Consistent', color: 'text-green-400' };
-            if (score >= 60) return { label: 'Consistent', color: 'text-cyan-400' };
-            if (score >= 40) return { label: 'Moderate', color: 'text-yellow-400' };
-            if (score >= 20) return { label: 'Irregular', color: 'text-orange-400' };
-            return { label: 'Erratic', color: 'text-red-400' };
-        };
-
-        const getMonetizationBadge = (subs) => {
-            if (subs >= 1000000) return { label: '1M+', color: 'from-yellow-400 to-amber-600', icon: '👑' };
-            if (subs >= 100000) return { label: '100K', color: 'from-purple-400 to-pink-600', icon: '💎' };
-            if (subs >= 10000) return { label: '10K', color: 'from-cyan-400 to-blue-600', icon: '⭐' };
-            if (subs >= 1000) return { label: 'YPP', color: 'from-green-400 to-emerald-600', icon: '✓' };
-            return null;
-        };
-
-        const ChannelDetailModal = ({ channel, onClose }) => {
-            if (!channel) return null;
-            const badge = getMonetizationBadge(channel.subscribers);
-            const momentum = getMomentumLabel(channel.momentumScore || 0);
-            const consistency = getConsistencyLabel(channel.consistencyScore || 0);
-
+        
+        function GrowthChart({ history, channelName }) {
+            const chartRef = useRef(null);
+            const chartInstance = useRef(null);
+            
+            useEffect(() => {
+                if (!chartRef.current || !history || history.length === 0) return;
+                
+                if (chartInstance.current) {
+                    chartInstance.current.destroy();
+                }
+                
+                const ctx = chartRef.current.getContext('2d');
+                const sortedHistory = [...history].sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                chartInstance.current = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: sortedHistory.map(h => new Date(h.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                        datasets: [{
+                            label: 'Subscribers',
+                            data: sortedHistory.map(h => h.subscribers),
+                            borderColor: 'rgb(6, 182, 212)',
+                            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            title: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: { color: '#94a3b8' },
+                                grid: { color: 'rgba(148, 163, 184, 0.1)' }
+                            },
+                            x: {
+                                ticks: { color: '#94a3b8' },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+                
+                return () => {
+                    if (chartInstance.current) {
+                        chartInstance.current.destroy();
+                    }
+                };
+            }, [history]);
+            
+            if (!history || history.length === 0) {
+                return (
+                    <div className="text-center py-8 text-slate-500">
+                        No historical data yet. Check back after the first weekly snapshot!
+                    </div>
+                );
+            }
+            
+            return <canvas ref={chartRef} height="200"></canvas>;
+        }
+        
+        function Leaderboard({ leaderboard }) {
+            if (!leaderboard || Object.keys(leaderboard).length === 0) {
+                return null;
+            }
+            
+            const categories = [
+                { key: 'Most Subscribers Gained', icon: 'Users', color: 'cyan', emoji: '🚀' },
+                { key: 'Highest Growth %', icon: 'TrendingUp', color: 'green', emoji: '📈' },
+                { key: 'Most Views Gained', icon: 'Eye', color: 'purple', emoji: '👀' },
+                { key: 'Most Videos Published', icon: 'Video', color: 'orange', emoji: '🎬' }
+            ];
+            
+            const hasAnyData = categories.some(cat => leaderboard[cat.key] && leaderboard[cat.key].length > 0);
+            
+            if (!hasAnyData) {
+                return null;
+            }
+            
             return (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" style={{ backgroundColor: 'rgba(0,0,0,0.85)' }} onClick={onClose}>
-                    <div className="modal-content glass-strong rounded-3xl max-w-5xl w-full max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
-                        {/* Header with banner */}
-                        <div className="relative h-40 bg-gradient-to-br from-cyan-900/50 to-purple-900/50">
-                            {channel.bannerUrl && <img src={channel.bannerUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40"/>}
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
-                            <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full bg-black/50 hover:bg-black/70"><Icons.Close /></button>
-                            <div className="absolute bottom-0 left-0 right-0 p-6 flex items-end gap-4">
-                                <div className="relative">
-                                    <img src={channel.thumbnailUrl} alt={channel.channelName} className="w-20 h-20 rounded-xl border-4 border-slate-900"/>
-                                    {badge && <div className={`absolute -bottom-2 -right-2 bg-gradient-to-r ${badge.color} rounded-lg px-2 py-1 text-xs font-bold`}>{badge.icon} {badge.label}</div>}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h2 className="text-2xl font-bold truncate">{channel.channelName}</h2>
-                                    <p className="text-cyan-400">{channel.friend}</p>
-                                </div>
-                                <a href={channel.channelUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-500 rounded-xl font-semibold">
-                                    <Icons.ExternalLink /> Visit Channel
-                                </a>
-                            </div>
+                <div className="mb-8 bg-gradient-to-br from-yellow-900/20 to-amber-900/20 backdrop-blur-sm rounded-xl p-6 border border-yellow-700/30">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 text-yellow-400"><Icons.Award /></div>
+                        <div>
+                            <h2 className="text-3xl font-black text-yellow-400">🏆 This Week's Champions</h2>
+                            <p className="text-yellow-600 text-sm">Updated every Sunday</p>
                         </div>
-
-                        {/* Content */}
-                        <div className="p-6 overflow-y-auto max-h-[calc(90vh-10rem)] scrollbar-thin">
-                            {/* Topic Categories */}
-                            {channel.topicCategories && channel.topicCategories.length > 0 && (
-                                <div className="mb-4 flex flex-wrap items-center gap-1">
-                                    <Icons.Tag />
-                                    {channel.topicCategories.map((topic, idx) => (
-                                        <span key={idx} className="tag bg-purple-500/20 text-purple-300">{topic}</span>
-                                    ))}
-                                    {channel.madeForKids && <span className="tag bg-yellow-500/20 text-yellow-300">Kids Content</span>}
-                                </div>
-                            )}
-
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                                <div className="glass rounded-xl p-4 text-center">
-                                    <div className="text-2xl font-bold gradient-text">{formatNumber(channel.subscribers)}</div>
-                                    <div className="text-sm text-slate-400">Subscribers</div>
-                                </div>
-                                <div className="glass rounded-xl p-4 text-center">
-                                    <div className="text-2xl font-bold text-cyan-400">{formatNumber(channel.views)}</div>
-                                    <div className="text-sm text-slate-400">Total Views</div>
-                                </div>
-                                <div className="glass rounded-xl p-4 text-center">
-                                    <div className="text-2xl font-bold text-purple-400">{channel.videos}</div>
-                                    <div className="text-sm text-slate-400">Videos</div>
-                                </div>
-                                <div className="glass rounded-xl p-4 text-center">
-                                    <div className="text-2xl font-bold text-green-400">{formatNumber(channel.avgViewsPerVideo || 0)}</div>
-                                    <div className="text-sm text-slate-400">Avg Views/Video</div>
-                                </div>
-                            </div>
-
-                            {/* Milestone Progress (if not yet at 1M) */}
-                            {channel.nextMilestone && (
-                                <div className="glass rounded-xl p-4 mb-6">
-                                    <div className="flex justify-between items-center mb-2">
-                                        <span className="flex items-center gap-2 text-slate-300">
-                                            <Icons.Target />
-                                            Next Milestone: <span className="font-bold text-white">{formatNumber(channel.nextMilestone)}</span>
-                                        </span>
-                                        <span className="text-cyan-400 font-medium">{channel.milestoneProgressPct}%</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {categories.map(category => {
+                            const data = leaderboard[category.key];
+                            if (!data || data.length === 0) return null;
+                            
+                            return (
+                                <div key={category.key} className="bg-slate-900/50 rounded-xl p-5 border border-slate-700/30">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <span className="text-2xl">{category.emoji}</span>
+                                        <h3 className="text-lg font-bold text-white">{category.key}</h3>
                                     </div>
-                                    <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
-                                        <div className="h-full progress-bar rounded-full transition-all" style={{ width: `${channel.milestoneProgressPct}%` }}/>
-                                    </div>
-                                    {channel.daysToYPP > 0 && channel.subscribers < 1000 && (
-                                        <p className="text-sm text-slate-400 mt-2">Estimated {channel.daysToYPP} days to YPP eligibility based on current growth</p>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="grid md:grid-cols-2 gap-6">
-                                {/* Left Column */}
-                                <div className="space-y-4">
-                                    <h3 className="text-lg font-semibold flex items-center gap-2"><Icons.Chart /> Channel Insights</h3>
-                                    <div className="glass rounded-xl p-4 space-y-3">
-                                        <div className="flex justify-between"><span className="text-slate-400 flex items-center gap-2"><Icons.Calendar /> Channel Age</span><span>{getChannelAge(channel.channelAgeDays)}</span></div>
-                                        <div className="flex justify-between"><span className="text-slate-400 flex items-center gap-2"><Icons.Globe /> Country</span><span>{channel.country || 'Unknown'}</span></div>
-                                        <div className="flex justify-between"><span className="text-slate-400 flex items-center gap-2"><Icons.Clock /> Upload Frequency</span><span>{getUploadFrequency(channel.uploadFrequencyDays)}</span></div>
-                                        <div className="flex justify-between"><span className="text-slate-400 flex items-center gap-2"><Icons.Video /> Last Upload</span><span>{formatDate(channel.lastVideoDate)}</span></div>
-                                        <div className="flex justify-between"><span className="text-slate-400 flex items-center gap-2"><Icons.Zap /> Consistency</span><span className={consistency.color}>{consistency.label}</span></div>
-                                    </div>
-
-                                    {/* Content Mix */}
-                                    <div className="glass rounded-xl p-4">
-                                        <h4 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2"><Icons.Film /> Content Mix</h4>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <div className="text-lg font-bold text-pink-400">{channel.shortsCount || 0}</div>
-                                                <div className="text-xs text-slate-500">Shorts (&lt;60s)</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-lg font-bold text-blue-400">{channel.longFormCount || 0}</div>
-                                                <div className="text-xs text-slate-500">Long Form</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-lg font-bold text-cyan-400">{channel.shortsPercentage || 0}%</div>
-                                                <div className="text-xs text-slate-500">Shorts Ratio</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-lg font-bold text-purple-400">{formatDuration(channel.avgVideoDurationSec)}</div>
-                                                <div className="text-xs text-slate-500">Avg Duration</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Momentum Score */}
-                                    <div className="glass rounded-xl p-4">
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="text-slate-400 flex items-center gap-2"><Icons.Fire /> Momentum</span>
-                                            <span className={`px-2 py-1 rounded-lg text-sm font-medium ${momentum.bg} ${momentum.color}`}>{momentum.label}</span>
-                                        </div>
-                                        <div className="h-3 bg-slate-700 rounded-full overflow-hidden">
-                                            <div className="h-full momentum-bar rounded-full" style={{ width: `${channel.momentumScore || 0}%` }}/>
-                                        </div>
-                                        <div className="flex justify-between text-xs text-slate-500 mt-1"><span>0</span><span>{channel.momentumScore || 0}/100</span></div>
-                                    </div>
-
-                                    {/* Engagement Stats */}
-                                    <div className="glass rounded-xl p-4">
-                                        <h4 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2"><Icons.Heart /> Engagement</h4>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <div className="text-lg font-bold text-red-400">{channel.avgLikeRatio || 0}%</div>
-                                                <div className="text-xs text-slate-500">Avg Like Ratio</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-lg font-bold text-blue-400">{formatNumber(channel.avgCommentCount || 0)}</div>
-                                                <div className="text-xs text-slate-500">Avg Comments</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-lg font-bold text-cyan-400">{channel.viewsPerSub || 0}x</div>
-                                                <div className="text-xs text-slate-500">Views per Sub</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-lg font-bold text-amber-400">{channel.topVideoMultiplier || 0}x</div>
-                                                <div className="text-xs text-slate-500">Top Video vs Avg</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Growth Stats */}
-                                    <div className="glass rounded-xl p-4">
-                                        <h4 className="text-sm font-medium text-slate-400 mb-3 flex items-center gap-2"><Icons.TrendingUp /> Growth</h4>
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div><div className={`text-lg font-bold ${channel.weekGrowth > 0 ? 'text-green-400' : 'text-slate-400'}`}>{channel.weekGrowth > 0 ? '+' : ''}{channel.weekGrowth || 0}%</div><div className="text-xs text-slate-500">Weekly Growth</div></div>
-                                            <div><div className={`text-lg font-bold ${channel.monthGrowth > 0 ? 'text-green-400' : 'text-slate-400'}`}>{channel.monthGrowth > 0 ? '+' : ''}{channel.monthGrowth || 0}%</div><div className="text-xs text-slate-500">Monthly Growth</div></div>
-                                            <div><div className="text-lg font-bold text-purple-400">{formatNumber(channel.estMonthlyViews || 0)}</div><div className="text-xs text-slate-500">Est. Monthly Views</div></div>
-                                            <div><div className="text-lg font-bold text-cyan-400">{channel.subsPerVideo || 0}</div><div className="text-xs text-slate-500">Subs per Video</div></div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Right Column - Videos */}
-                                <div className="space-y-4">
-                                    {channel.topVideo && (
-                                        <>
-                                            <h3 className="text-lg font-semibold flex items-center gap-2"><Icons.Star /> Top Recent Video</h3>
-                                            <a href={`https://www.youtube.com/watch?v=${channel.topVideo.videoId}`} target="_blank" rel="noopener noreferrer" className="block glass rounded-xl overflow-hidden video-card">
-                                                <div className="relative">
-                                                    <img src={`https://img.youtube.com/vi/${channel.topVideo.videoId}/mqdefault.jpg`} alt={channel.topVideo.title} className="w-full aspect-video object-cover"/>
-                                                    <div className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 hover:opacity-100 transition-opacity">
-                                                        <div className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center"><Icons.Play /></div>
-                                                    </div>
-                                                    <div className="absolute bottom-2 right-2 bg-black/80 px-2 py-1 rounded text-sm font-medium">{formatNumber(channel.topVideo.views)} views</div>
+                                    
+                                    <div className="space-y-2">
+                                        {data.slice(0, 5).map((entry, idx) => (
+                                            <div 
+                                                key={idx}
+                                                className={`flex items-center gap-3 p-3 rounded-lg transition-all ${
+                                                    idx === 0 ? 'bg-gradient-to-r from-yellow-900/40 to-amber-900/40 border-2 border-yellow-600/50' :
+                                                    idx === 1 ? 'bg-slate-800/50 border border-slate-600/30' :
+                                                    idx === 2 ? 'bg-slate-800/30 border border-slate-600/20' :
+                                                    'bg-slate-800/20'
+                                                }`}
+                                            >
+                                                <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center font-black ${
+                                                    idx === 0 ? 'bg-gradient-to-br from-yellow-500 to-amber-600 text-white text-lg' :
+                                                    idx === 1 ? 'bg-gradient-to-br from-slate-400 to-slate-500 text-white' :
+                                                    idx === 2 ? 'bg-gradient-to-br from-amber-700 to-amber-800 text-white' :
+                                                    'bg-slate-700 text-slate-400'
+                                                }`}>
+                                                    {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : entry.rank}
                                                 </div>
-                                                <div className="p-3">
-                                                    <h4 className="font-medium line-clamp-2">{channel.topVideo.title}</h4>
-                                                    <p className="text-sm text-slate-400 mt-1">{formatDate(channel.topVideo.publishedAt)}</p>
+                                                
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-sm font-bold text-white truncate">{entry.channelName}</div>
+                                                    <div className="text-xs text-slate-400">{entry.friendName}</div>
                                                 </div>
-                                            </a>
-                                        </>
-                                    )}
-
-                                    {channel.recentVideos && channel.recentVideos.length > 0 && (
-                                        <>
-                                            <h3 className="text-lg font-semibold flex items-center gap-2 mt-4"><Icons.Video /> Recent Videos</h3>
-                                            <div className="space-y-2">
-                                                {channel.recentVideos.map((video, idx) => (
-                                                    <a key={idx} href={`https://www.youtube.com/watch?v=${video.videoId}`} target="_blank" rel="noopener noreferrer" className="flex gap-3 glass rounded-xl p-2 video-card">
-                                                        <img src={`https://img.youtube.com/vi/${video.videoId}/default.jpg`} alt={video.title} className="w-24 h-16 object-cover rounded-lg flex-shrink-0"/>
-                                                        <div className="min-w-0 flex-1">
-                                                            <h4 className="font-medium text-sm line-clamp-2">{video.title}</h4>
-                                                            <p className="text-xs text-slate-400 mt-1">{formatNumber(video.views)} views</p>
-                                                        </div>
-                                                    </a>
-                                                ))}
+                                                
+                                                <div className={`text-right font-black ${
+                                                    idx === 0 ? 'text-yellow-400 text-lg' :
+                                                    idx === 1 ? 'text-slate-300' :
+                                                    'text-slate-400'
+                                                }`}>
+                                                    {entry.value}
+                                                </div>
                                             </div>
-                                        </>
-                                    )}
-
-                                    {channel.description && (
-                                        <div className="glass rounded-xl p-4 mt-4">
-                                            <h3 className="text-lg font-semibold mb-2">About</h3>
-                                            <p className="text-slate-300 text-sm whitespace-pre-line line-clamp-6">{channel.description}</p>
-                                        </div>
-                                    )}
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
+                            );
+                        })}
                     </div>
                 </div>
             );
-        };
-
-        const App = () => {
-            const [channels, setChannels] = React.useState([]);
-            const [stats, setStats] = React.useState({ totalChannels: 0, matureChannels: 0, monetizedChannels: 0, monetizationRate: 0 });
-            const [loading, setLoading] = React.useState(true);
-            const [searchTerm, setSearchTerm] = React.useState('');
-            const [sortBy, setSortBy] = React.useState('subscribers');
-            const [filterStatus, setFilterStatus] = React.useState('all');
-            const [selectedChannel, setSelectedChannel] = React.useState(null);
-            const [showHelp, setShowHelp] = React.useState(false);
-
-            React.useEffect(() => {
-                const fetchData = async () => {
-                    try {
-                        const response = await fetch(CONFIG.APPS_SCRIPT_URL);
-                        const data = await response.json();
-                        setChannels(data.channels || []);
-                        setStats(data.stats || {});
-                    } catch (error) {
-                        console.error('Error:', error);
-                    } finally {
-                        setLoading(false);
-                    }
-                };
+        }
+        
+        function GroundedLifeTracker() {
+            const [channels, setChannels] = useState([]);
+            const [stats, setStats] = useState(null);
+            const [trendingChannels, setTrendingChannels] = useState([]);
+            const [recentMilestones, setRecentMilestones] = useState([]);
+            const [leaderboard, setLeaderboard] = useState({});
+            const [loading, setLoading] = useState(true);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [sortBy, setSortBy] = useState('subscribers');
+            const [filterStatus, setFilterStatus] = useState('all');
+            const [showFilters, setShowFilters] = useState(false);
+            const [expandedChannel, setExpandedChannel] = useState(null);
+            const [lastUpdated, setLastUpdated] = useState(null);
+            
+            useEffect(() => {
                 fetchData();
             }, []);
-
-            const filteredChannels = React.useMemo(() => {
-                let filtered = channels;
-                if (searchTerm) {
-                    const term = searchTerm.toLowerCase();
-                    filtered = filtered.filter(c => 
-                        c.channelName?.toLowerCase().includes(term) || 
-                        c.friend?.toLowerCase().includes(term) ||
-                        c.topicCategories?.some(t => t.toLowerCase().includes(term))
-                    );
+            
+            const fetchData = async () => {
+                setLoading(true);
+                try {
+                    const response = await fetch(CONFIG.APPS_SCRIPT_URL);
+                    const data = await response.json();
+                    setChannels(data.channels || []);
+                    setStats(data.stats || {});
+                    setTrendingChannels(data.trendingChannels || []);
+                    setRecentMilestones(data.recentMilestones || []);
+                    setLeaderboard(data.leaderboard || {});
+                    setLastUpdated(new Date(data.lastUpdated));
+                    setLoading(false);
+                } catch (error) {
+                    console.error('Error fetching data:', error);
+                    setLoading(false);
                 }
-                if (filterStatus === 'monetized') filtered = filtered.filter(c => c.isMonetized);
-                else if (filterStatus === 'active') filtered = filtered.filter(c => c.status === 'Active');
-                else if (filterStatus === 'shorts') filtered = filtered.filter(c => c.shortsPercentage >= 50);
-
-                filtered.sort((a, b) => {
+            };
+            
+            const filteredAndSortedChannels = channels
+                .filter(channel => {
+                    const matchesSearch = channel.friend.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                        channel.channelName.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesFilter = filterStatus === 'all' ||
+                                        (filterStatus === 'monetized' && channel.isMonetized) ||
+                                        (filterStatus === 'active' && channel.status === 'Active') ||
+                                        (filterStatus === 'inactive' && channel.status !== 'Active') ||
+                                        (filterStatus === 'trending' && channel.weekGrowth > 0);
+                    return matchesSearch && matchesFilter;
+                })
+                .sort((a, b) => {
                     switch (sortBy) {
-                        case 'subscribers': return (b.subscribers || 0) - (a.subscribers || 0);
-                        case 'views': return (b.views || 0) - (a.views || 0);
-                        case 'growth': return (b.weekGrowth || 0) - (a.weekGrowth || 0);
-                        case 'momentum': return (b.momentumScore || 0) - (a.momentumScore || 0);
-                        case 'consistency': return (b.consistencyScore || 0) - (a.consistencyScore || 0);
-                        case 'engagement': return (b.avgLikeRatio || 0) - (a.avgLikeRatio || 0);
-                        case 'name': return (a.channelName || '').localeCompare(b.channelName || '');
+                        case 'subscribers': return b.subscribers - a.subscribers;
+                        case 'views': return b.views - a.views;
+                        case 'videos': return b.videos - a.videos;
+                        case 'growth': return b.weekGrowth - a.weekGrowth;
+                        case 'recent': return new Date(b.lastVideoDate) - new Date(a.lastVideoDate);
+                        case 'name': return a.friend.localeCompare(b.friend);
                         default: return 0;
                     }
                 });
-                return filtered;
-            }, [channels, searchTerm, sortBy, filterStatus]);
-
-            if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"/></div>;
-
+            
+            const formatNumber = (num) => {
+                if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+                if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+                return num?.toString() || '0';
+            };
+            
+            const getMonetizationBadge = (subs) => {
+                if (subs >= 100000) return { label: '100K Club', color: 'from-purple-600 to-pink-600' };
+                if (subs >= 10000) return { label: '10K Club', color: 'from-blue-600 to-cyan-600' };
+                if (subs >= 1000) return { label: 'Monetized', color: 'from-green-600 to-emerald-600' };
+                if (subs >= 100) return { label: '100+ Subs', color: 'from-orange-600 to-amber-600' };
+                return null;
+            };
+            
+            const getDaysAgo = (dateString) => {
+                const date = new Date(dateString);
+                const now = new Date();
+                const days = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+                if (days === 0) return 'Today';
+                if (days === 1) return 'Yesterday';
+                if (days < 7) return `${days} days ago`;
+                if (days < 30) return `${Math.floor(days / 7)} weeks ago`;
+                return `${Math.floor(days / 30)} months ago`;
+            };
+            
+            if (loading) {
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-cyan-500 mb-4"></div>
+                            <p className="text-cyan-400 text-xl font-semibold">Loading Grounded Life Community...</p>
+                        </div>
+                    </div>
+                );
+            }
+            
             return (
-                <div className="min-h-screen">
-                    {/* Header */}
-                    <header className="border-b border-slate-800/50">
-                        <div className="max-w-7xl mx-auto px-6 py-8 flex justify-between items-start">
-                            <div>
-                                <h1 className="text-4xl font-bold"><span className="gradient-text">Grounded Life</span> Community</h1>
-                                <p className="text-slate-400 mt-1">YouTube Creator Network</p>
+                <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
+                    {/* Hero Header */}
+                    <div className="relative overflow-hidden border-b border-cyan-900/30">
+                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-950/20 to-blue-950/20"></div>
+                        <div className="absolute inset-0" style={{
+                            backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(6, 182, 212, 0.15) 1px, transparent 0)',
+                            backgroundSize: '40px 40px'
+                        }}></div>
+                        
+                        <div className="relative max-w-7xl mx-auto px-6 py-16">
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-2xl shadow-cyan-500/30">
+                                    <div className="w-9 h-9"><Icons.Users /></div>
+                                </div>
+                                <div>
+                                    <h1 className="text-5xl font-black bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 bg-clip-text text-transparent">
+                                        Grounded Life
+                                    </h1>
+                                    <p className="text-cyan-400/80 text-lg font-medium">YouTube Community Showcase</p>
+                                </div>
                             </div>
-                            <button onClick={() => setShowHelp(true)} className="flex items-center gap-2 px-4 py-2 glass rounded-xl hover:bg-white/5 transition-colors">
-                                <Icons.Help />
-                                <span className="hidden sm:inline">Metrics Guide</span>
-                            </button>
-                        </div>
-                    </header>
-
-                    {/* Stats */}
-                    <div className="border-b border-slate-800/50 bg-slate-900/30">
-                        <div className="max-w-7xl mx-auto px-6 py-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="glass rounded-xl p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400"><Icons.Users /></div><div><div className="text-2xl font-bold">{stats.totalChannels}</div><div className="text-sm text-slate-400">Channels</div></div></div></div>
-                            <div className="glass rounded-xl p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400"><Icons.Award /></div><div><div className="text-2xl font-bold">{stats.matureChannels}</div><div className="text-sm text-slate-400">Mature</div></div></div></div>
-                            <div className="glass rounded-xl p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center text-green-400"><Icons.TrendingUp /></div><div><div className="text-2xl font-bold">{stats.monetizedChannels}</div><div className="text-sm text-slate-400">Monetized</div></div></div></div>
-                            <div className="glass rounded-xl p-4"><div className="flex items-center gap-3"><div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400"><Icons.Star /></div><div><div className="text-2xl font-bold">{stats.monetizationRate}%</div><div className="text-sm text-slate-400">YPP Rate</div></div></div></div>
-                        </div>
-                    </div>
-
-                    {/* Filters */}
-                    <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row gap-4">
-                        <div className="flex-1 relative">
-                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400"><Icons.Search /></div>
-                            <input type="text" placeholder="Search channels, creators, or topics..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-12 pr-4 py-3 glass rounded-xl bg-transparent outline-none placeholder-slate-500 focus:ring-2 focus:ring-cyan-500/50"/>
-                        </div>
-                        <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="px-4 py-3 glass rounded-xl bg-slate-900 outline-none cursor-pointer">
-                            <option value="subscribers">Sort by Subscribers</option>
-                            <option value="views">Sort by Views</option>
-                            <option value="growth">Sort by Growth</option>
-                            <option value="momentum">Sort by Momentum</option>
-                            <option value="consistency">Sort by Consistency</option>
-                            <option value="engagement">Sort by Engagement</option>
-                            <option value="name">Sort by Name</option>
-                        </select>
-                        <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)} className="px-4 py-3 glass rounded-xl bg-slate-900 outline-none cursor-pointer">
-                            <option value="all">All Channels</option>
-                            <option value="monetized">Monetized Only</option>
-                            <option value="active">Active Only</option>
-                            <option value="shorts">Shorts Creators</option>
-                        </select>
-                    </div>
-
-                    {/* Channel Grid */}
-                    <div className="max-w-7xl mx-auto px-6 pb-12">
-                        <p className="text-slate-400 mb-4">Showing <span className="text-cyan-400 font-semibold">{filteredChannels.length}</span> of {channels.length} channels • Click for details</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {filteredChannels.map((channel, idx) => {
-                                const badge = getMonetizationBadge(channel.subscribers);
-                                const momentum = getMomentumLabel(channel.momentumScore || 0);
-                                return (
-                                    <div key={channel.channelId || idx} onClick={() => setSelectedChannel(channel)} className="channel-card glass rounded-2xl p-4 cursor-pointer hover:border-cyan-500/50">
-                                        <div className="flex gap-4">
-                                            <div className="relative flex-shrink-0">
-                                                <div className="w-16 h-16 rounded-xl overflow-hidden bg-slate-700">
-                                                    {channel.thumbnailUrl ? <img src={channel.thumbnailUrl} alt={channel.channelName} className="w-full h-full object-cover"/> : <div className="w-full h-full flex items-center justify-center text-slate-600"><Icons.Video /></div>}
-                                                </div>
-                                                {badge && <div className={`absolute -bottom-1 -right-1 bg-gradient-to-r ${badge.color} rounded-md px-1.5 py-0.5 text-[10px] font-bold`}>{badge.icon}</div>}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h3 className="font-semibold truncate">{channel.channelName}</h3>
-                                                <p className="text-sm text-cyan-400 truncate">{channel.friend}</p>
-                                                <div className="flex items-center gap-3 mt-2 text-sm text-slate-400">
-                                                    <span className="flex items-center gap-1"><Icons.Users />{formatNumber(channel.subscribers)}</span>
-                                                    <span className="flex items-center gap-1"><Icons.Eye />{formatNumber(channel.views)}</span>
-                                                </div>
-                                            </div>
+                            
+                            <p className="text-slate-300 text-lg max-w-3xl mb-8 leading-relaxed">
+                                Discover amazing content creators from the Grounded Life community. Track growth, celebrate milestones, 
+                                and connect with fellow creators building their YouTube journey.
+                            </p>
+                            
+                            {/* Stats Grid */}
+                            {stats && (
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                                    <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-xl p-5 border border-cyan-900/30 hover:border-cyan-700/50 transition-all">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="w-5 h-5 text-cyan-400"><Icons.Users /></div>
+                                            <span className="text-slate-400 text-sm font-medium">Channels</span>
                                         </div>
-                                        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-700/50">
-                                            <div className="flex items-center gap-2">
-                                                {channel.weekGrowth > 0 && <span className="text-xs text-green-400 flex items-center gap-1"><Icons.TrendingUp />+{channel.weekGrowth}%</span>}
-                                                <span className={`text-xs px-2 py-0.5 rounded ${momentum.bg} ${momentum.color}`}>{momentum.label}</span>
+                                        <div className="text-3xl font-black text-white">{stats.totalChannels}</div>
+                                    </div>
+                                    
+                                    <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-xl p-5 border border-green-900/30 hover:border-green-700/50 transition-all">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="w-5 h-5 text-green-400"><Icons.Award /></div>
+                                            <span className="text-slate-400 text-sm font-medium">Monetized</span>
+                                        </div>
+                                        <div className="text-3xl font-black text-white">{stats.monetizedChannels}</div>
+                                        <div className="text-green-400 text-xs font-semibold mt-1">{stats.monetizationRate}% Success Rate</div>
+                                    </div>
+                                    
+                                    <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-xl p-5 border border-purple-900/30 hover:border-purple-700/50 transition-all">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="w-5 h-5 text-purple-400"><Icons.TrendingUp /></div>
+                                            <span className="text-slate-400 text-sm font-medium">Mature</span>
+                                        </div>
+                                        <div className="text-3xl font-black text-white">{stats.matureChannels}</div>
+                                        <div className="text-purple-400 text-xs font-semibold mt-1">50+ Videos</div>
+                                    </div>
+                                    
+                                    <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-sm rounded-xl p-5 border border-orange-900/30 hover:border-orange-700/50 transition-all">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="w-5 h-5 text-orange-400"><Icons.Award /></div>
+                                            <span className="text-slate-400 text-sm font-medium">Success vs Industry</span>
+                                        </div>
+                                        <div className="text-3xl font-black text-white">144x</div>
+                                        <div className="text-orange-400 text-xs font-semibold mt-1">Industry avg: 0.25%</div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Weekly Leaderboard */}
+                            <Leaderboard leaderboard={leaderboard} />
+                            
+                            {/* Trending Section */}
+                            {trendingChannels.length > 0 && (
+                                <div className="mb-8 bg-gradient-to-br from-amber-900/20 to-orange-900/20 backdrop-blur-sm rounded-xl p-6 border border-amber-700/30">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-8 h-8 text-amber-400"><Icons.Zap /></div>
+                                        <h2 className="text-2xl font-black text-amber-400">🔥 Trending This Week</h2>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                        {trendingChannels.slice(0, 6).map((channel, idx) => (
+                                            <div key={idx} className="bg-slate-900/50 rounded-lg p-4 border border-amber-700/20 hover:border-amber-600/40 transition-all">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="text-2xl font-black text-amber-400">#{idx + 1}</div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="text-sm font-bold text-white truncate">{channel.channelName}</div>
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <div className="w-3 h-3 text-green-400"><Icons.TrendingUp /></div>
+                                                            <span className="text-green-400 font-bold text-sm">+{channel.weekGrowth}%</span>
+                                                            <span className="text-slate-500 text-xs">({channel.weekSubsChange > 0 ? '+' : ''}{channel.weekSubsChange} subs)</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <span className={`text-xs px-2 py-0.5 rounded ${channel.status === 'Active' ? 'bg-green-500/20 text-green-400' : 'bg-slate-500/20 text-slate-400'}`}>{channel.status}</span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Recent Milestones */}
+                            {recentMilestones.length > 0 && (
+                                <div className="mb-8 bg-gradient-to-br from-purple-900/20 to-pink-900/20 backdrop-blur-sm rounded-xl p-6 border border-purple-700/30">
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="w-8 h-8 text-purple-400"><Icons.Target /></div>
+                                        <h2 className="text-2xl font-black text-purple-400">🎉 Recent Milestones</h2>
+                                    </div>
+                                    <div className="space-y-2">
+                                        {recentMilestones.slice(0, 5).map((milestone, idx) => (
+                                            <div key={idx} className="bg-slate-900/50 rounded-lg p-4 border border-purple-700/20 flex items-center gap-4">
+                                                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                                    <div className="w-5 h-5 text-white"><Icons.Award /></div>
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="font-bold text-white">{milestone.channelName}</div>
+                                                    <div className="text-sm text-slate-400">{milestone.friendName} reached {formatNumber(milestone.value)} {milestone.type.toLowerCase()}</div>
+                                                </div>
+                                                <div className="text-xs text-slate-500">{getDaysAgo(milestone.date)}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {/* Search and Filter */}
+                            <div className="flex flex-col md:flex-row gap-4">
+                                <div className="flex-1 relative">
+                                    <div className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-cyan-400">
+                                        <Icons.Search />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder="Search by creator name or channel..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full bg-slate-800/80 backdrop-blur-sm border border-cyan-900/30 rounded-xl pl-12 pr-4 py-3.5 text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20 transition-all"
+                                    />
+                                </div>
+                                
+                                <button
+                                    onClick={() => setShowFilters(!showFilters)}
+                                    className="md:w-auto bg-slate-800/80 backdrop-blur-sm border border-cyan-900/30 rounded-xl px-6 py-3.5 text-cyan-400 hover:bg-slate-700/80 hover:border-cyan-700/50 transition-all flex items-center justify-center gap-2 font-semibold"
+                                >
+                                    <div className="w-5 h-5"><Icons.Filter /></div>
+                                    Filters
+                                    <div className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`}>
+                                        <Icons.ChevronDown />
+                                    </div>
+                                </button>
+                            </div>
+                            
+                            {/* Filter Panel */}
+                            {showFilters && (
+                                <div className="mt-4 bg-slate-800/80 backdrop-blur-sm border border-cyan-900/30 rounded-xl p-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div>
+                                            <label className="text-sm font-semibold text-cyan-400 mb-3 block">Sort By</label>
+                                            <select
+                                                value={sortBy}
+                                                onChange={(e) => setSortBy(e.target.value)}
+                                                className="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20"
+                                            >
+                                                <option value="subscribers">Most Subscribers</option>
+                                                <option value="growth">Fastest Growing</option>
+                                                <option value="views">Most Views</option>
+                                                <option value="videos">Most Videos</option>
+                                                <option value="recent">Most Recent Upload</option>
+                                                <option value="name">Creator Name (A-Z)</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="text-sm font-semibold text-cyan-400 mb-3 block">Filter By</label>
+                                            <select
+                                                value={filterStatus}
+                                                onChange={(e) => setFilterStatus(e.target.value)}
+                                                className="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-cyan-500/50 focus:ring-2 focus:ring-cyan-500/20"
+                                            >
+                                                <option value="all">All Channels</option>
+                                                <option value="trending">Trending (Growing)</option>
+                                                <option value="monetized">Monetized Only</option>
+                                                <option value="active">Active Only</option>
+                                                <option value="inactive">Inactive</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            
+                            {lastUpdated && (
+                                <div className="mt-6 text-slate-500 text-sm flex items-center gap-2">
+                                    <div className="w-4 h-4"><Icons.Calendar /></div>
+                                    Last updated: {lastUpdated.toLocaleDateString()} at {lastUpdated.toLocaleTimeString()}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                    
+                    {/* Channel Grid */}
+                    <div className="max-w-7xl mx-auto px-6 py-12">
+                        <div className="mb-8">
+                            <p className="text-slate-400">
+                                Showing <span className="text-cyan-400 font-semibold">{filteredAndSortedChannels.length}</span> of {channels.length} channels
+                            </p>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            {filteredAndSortedChannels.map((channel, index) => {
+                                const badge = getMonetizationBadge(channel.subscribers);
+                                const isExpanded = expandedChannel === channel.channelId;
+                                
+                                return (
+                                    <div
+                                        key={index}
+                                        className="channel-card group bg-gradient-to-br from-slate-800/60 to-slate-900/60 backdrop-blur-sm rounded-2xl border border-slate-700/50 hover:border-cyan-600/50 transition-all duration-300 overflow-hidden hover:shadow-2xl hover:shadow-cyan-500/10"
+                                        style={{ animationDelay: `${index * 0.05}s` }}
+                                    >
+                                        <div className="p-6">
+                                            {/* Header */}
+                                            <div className="flex gap-4 mb-4">
+                                                <div className="relative flex-shrink-0">
+                                                    <div className="w-20 h-20 rounded-xl overflow-hidden bg-slate-700/50 border-2 border-slate-600/50 group-hover:border-cyan-500/50 transition-all flex items-center justify-center">
+                                                        {channel.thumbnailUrl ? (
+                                                            <img src={channel.thumbnailUrl} alt={channel.channelName} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <div className="w-10 h-10 text-slate-600"><Icons.Video /></div>
+                                                        )}
+                                                    </div>
+                                                    {badge && (
+                                                        <div className={`absolute -bottom-2 -right-2 bg-gradient-to-r ${badge.color} rounded-lg px-2 py-1 text-[10px] font-black text-white shadow-lg`}>
+                                                            {badge.label}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-start justify-between gap-2 mb-1">
+                                                        <h3 className="text-lg font-bold text-white truncate group-hover:text-cyan-400 transition-colors">
+                                                            {channel.channelName}
+                                                        </h3>
+                                                        <a
+                                                            href={channel.channelUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="flex-shrink-0 w-8 h-8 bg-slate-700/50 hover:bg-cyan-600 rounded-lg flex items-center justify-center transition-all group/link"
+                                                            title="Visit channel"
+                                                        >
+                                                            <div className="w-4 h-4 text-slate-400 group-hover/link:text-white">
+                                                                <Icons.ExternalLink />
+                                                            </div>
+                                                        </a>
+                                                    </div>
+                                                    <p className="text-slate-400 text-sm mb-2">{channel.friend}</p>
+                                                    
+                                                    <div className="flex items-center gap-2 text-xs flex-wrap">
+                                                        <span className={`px-2 py-1 rounded-md font-semibold ${
+                                                            channel.status === 'Active'
+                                                                ? 'bg-green-900/30 text-green-400 border border-green-700/30'
+                                                                : 'bg-slate-700/30 text-slate-400 border border-slate-600/30'
+                                                        }`}>
+                                                            {channel.status}
+                                                        </span>
+                                                        {channel.isMature && (
+                                                            <span className="px-2 py-1 rounded-md font-semibold bg-purple-900/30 text-purple-400 border border-purple-700/30">
+                                                                Mature
+                                                            </span>
+                                                        )}
+                                                        {channel.weekGrowth > 0 && (
+                                                            <span className="px-2 py-1 rounded-md font-semibold bg-green-900/30 text-green-400 border border-green-700/30 flex items-center gap-1">
+                                                                <div className="w-3 h-3"><Icons.TrendingUp /></div>
+                                                                +{channel.weekGrowth}%
+                                                            </span>
+                                                        )}
+                                                        {channel.weekGrowth < 0 && (
+                                                            <span className="px-2 py-1 rounded-md font-semibold bg-red-900/30 text-red-400 border border-red-700/30 flex items-center gap-1">
+                                                                <div className="w-3 h-3"><Icons.TrendingDown /></div>
+                                                                {channel.weekGrowth}%
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Stats Grid */}
+                                            <div className="grid grid-cols-3 gap-4 mb-4">
+                                                <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700/30">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <div className="w-3.5 h-3.5 text-cyan-400"><Icons.Users /></div>
+                                                        <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">Subs</span>
+                                                    </div>
+                                                    <div className="text-lg font-black text-white">{formatNumber(channel.subscribers)}</div>
+                                                    {channel.weekSubsChange !== 0 && (
+                                                        <div className={`text-xs font-semibold ${channel.weekSubsChange > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                            {channel.weekSubsChange > 0 ? '+' : ''}{formatNumber(channel.weekSubsChange)} this week
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                
+                                                <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700/30">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <div className="w-3.5 h-3.5 text-purple-400"><Icons.Eye /></div>
+                                                        <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">Views</span>
+                                                    </div>
+                                                    <div className="text-lg font-black text-white">{formatNumber(channel.views)}</div>
+                                                </div>
+                                                
+                                                <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700/30">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <div className="w-3.5 h-3.5 text-orange-400"><Icons.Video /></div>
+                                                        <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wide">Videos</span>
+                                                    </div>
+                                                    <div className="text-lg font-black text-white">{channel.videos}</div>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Last Upload */}
+                                            <div className="flex items-center justify-between gap-2 text-sm mb-4">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-4 h-4 text-slate-500"><Icons.Calendar /></div>
+                                                    <span className="text-slate-400">Last upload:</span>
+                                                    <span className="text-slate-300 font-medium">{getDaysAgo(channel.lastVideoDate)}</span>
+                                                </div>
+                                                
+                                                {channel.history && channel.history.length > 0 && (
+                                                    <button
+                                                        onClick={() => setExpandedChannel(isExpanded ? null : channel.channelId)}
+                                                        className="text-cyan-400 hover:text-cyan-300 text-xs font-semibold flex items-center gap-1 transition-colors"
+                                                    >
+                                                        {isExpanded ? 'Hide' : 'View'} Growth
+                                                        <div className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}>
+                                                            <Icons.ChevronRight />
+                                                        </div>
+                                                    </button>
+                                                )}
+                                            </div>
+                                            
+                                            {/* Expanded Growth Chart */}
+                                            {isExpanded && (
+                                                <div className="expand-content border-t border-slate-700/50 pt-4 mt-4">
+                                                    <h4 className="text-sm font-bold text-cyan-400 mb-3">Subscriber Growth</h4>
+                                                    <GrowthChart history={channel.history} channelName={channel.channelName} />
+                                                    
+                                                    {channel.monthGrowth !== 0 && (
+                                                        <div className="mt-4 text-center">
+                                                            <span className="text-slate-400 text-sm">30-day growth: </span>
+                                                            <span className={`font-bold ${channel.monthGrowth > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                                                {channel.monthGrowth > 0 ? '+' : ''}{channel.monthGrowth}%
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 );
                             })}
                         </div>
-                        {filteredChannels.length === 0 && <div className="text-center py-12 text-slate-500">No channels found</div>}
+                        
+                        {filteredAndSortedChannels.length === 0 && (
+                            <div className="text-center py-16">
+                                <div className="w-20 h-20 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                                    <div className="w-10 h-10 text-slate-600"><Icons.Search /></div>
+                                </div>
+                                <h3 className="text-2xl font-bold text-slate-300 mb-2">No channels found</h3>
+                                <p className="text-slate-500">Try adjusting your search or filters</p>
+                            </div>
+                        )}
                     </div>
-
-                    {selectedChannel && <ChannelDetailModal channel={selectedChannel} onClose={() => setSelectedChannel(null)} />}
                     
-                    {/* Help Modal */}
-                    {showHelp && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop" style={{ backgroundColor: 'rgba(0,0,0,0.85)' }} onClick={() => setShowHelp(false)}>
-                            <div className="modal-content glass-strong rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden" onClick={e => e.stopPropagation()}>
-                                <div className="p-6 border-b border-slate-700/50 flex justify-between items-center">
-                                    <h2 className="text-2xl font-bold">Metrics Guide</h2>
-                                    <button onClick={() => setShowHelp(false)} className="p-2 rounded-full hover:bg-white/10"><Icons.Close /></button>
-                                </div>
-                                <div className="p-6 overflow-y-auto max-h-[calc(90vh-5rem)] scrollbar-thin space-y-6">
-                                    
-                                    {/* Monetization Badges */}
-                                    <div>
-                                        <h3 className="text-lg font-semibold mb-3 text-cyan-400">Monetization Badges</h3>
-                                        <div className="glass rounded-xl p-4 space-y-2">
-                                            <div className="flex justify-between items-center"><span><span className="inline-block w-12 text-center bg-gradient-to-r from-green-400 to-emerald-600 rounded px-2 py-0.5 text-xs font-bold mr-2">✓ YPP</span> YouTube Partner Program eligible</span><span className="text-slate-400">1,000+ subs</span></div>
-                                            <div className="flex justify-between items-center"><span><span className="inline-block w-12 text-center bg-gradient-to-r from-cyan-400 to-blue-600 rounded px-2 py-0.5 text-xs font-bold mr-2">⭐ 10K</span> Established creator</span><span className="text-slate-400">10,000+ subs</span></div>
-                                            <div className="flex justify-between items-center"><span><span className="inline-block w-12 text-center bg-gradient-to-r from-purple-400 to-pink-600 rounded px-2 py-0.5 text-xs font-bold mr-2">💎 100K</span> Major milestone</span><span className="text-slate-400">100,000+ subs</span></div>
-                                            <div className="flex justify-between items-center"><span><span className="inline-block w-12 text-center bg-gradient-to-r from-yellow-400 to-amber-600 rounded px-2 py-0.5 text-xs font-bold mr-2">👑 1M+</span> Elite creator</span><span className="text-slate-400">1,000,000+ subs</span></div>
-                                        </div>
-                                        <p className="text-sm text-slate-500 mt-2">YPP (YouTube Partner Program) allows creators to earn money from ads. Requires 1,000 subscribers + 4,000 watch hours or 10M Shorts views.</p>
-                                    </div>
-
-                                    {/* Momentum Score */}
-                                    <div>
-                                        <h3 className="text-lg font-semibold mb-3 text-cyan-400">Momentum Score (0-100)</h3>
-                                        <p className="text-sm text-slate-400 mb-3">Based on upload frequency + view efficiency + recent activity</p>
-                                        <div className="glass rounded-xl p-4 space-y-2">
-                                            <div className="flex justify-between"><span className="text-slate-400">Warming Up</span><span>0-19 • Low activity or new channel</span></div>
-                                            <div className="flex justify-between"><span className="text-yellow-400">Building</span><span>20-39 • Getting started</span></div>
-                                            <div className="flex justify-between"><span className="text-cyan-400">Steady</span><span>40-59 • Consistent effort</span></div>
-                                            <div className="flex justify-between"><span className="text-green-400">Strong</span><span>60-79 • Good momentum</span></div>
-                                            <div className="flex justify-between"><span className="text-orange-400">On Fire</span><span>80-100 • Highly active, strong performance</span></div>
-                                        </div>
-                                    </div>
-
-                                    {/* Consistency Score */}
-                                    <div>
-                                        <h3 className="text-lg font-semibold mb-3 text-cyan-400">Consistency Score (0-100)</h3>
-                                        <p className="text-sm text-slate-400 mb-3">How regular the time between uploads is</p>
-                                        <div className="glass rounded-xl p-4 space-y-2">
-                                            <div className="flex justify-between"><span className="text-red-400">Erratic</span><span>0-19 • Very irregular schedule</span></div>
-                                            <div className="flex justify-between"><span className="text-orange-400">Irregular</span><span>20-39 • Unpredictable timing</span></div>
-                                            <div className="flex justify-between"><span className="text-yellow-400">Moderate</span><span>40-59 • Somewhat consistent</span></div>
-                                            <div className="flex justify-between"><span className="text-cyan-400">Consistent</span><span>60-79 • Reliable schedule</span></div>
-                                            <div className="flex justify-between"><span className="text-green-400">Very Consistent</span><span>80-100 • Uploads like clockwork</span></div>
-                                        </div>
-                                    </div>
-
-                                    {/* Channel Status */}
-                                    <div>
-                                        <h3 className="text-lg font-semibold mb-3 text-cyan-400">Channel Status</h3>
-                                        <div className="glass rounded-xl p-4 space-y-2">
-                                            <div className="flex justify-between"><span className="text-green-400">Active</span><span>Uploaded within last 30 days</span></div>
-                                            <div className="flex justify-between"><span className="text-slate-400">Inactive</span><span>No uploads in 30+ days</span></div>
-                                        </div>
-                                    </div>
-
-                                    {/* Other Metrics */}
-                                    <div>
-                                        <h3 className="text-lg font-semibold mb-3 text-cyan-400">Other Metrics</h3>
-                                        <div className="glass rounded-xl p-4 space-y-3">
-                                            <div><span className="text-white font-medium">Avg Views/Video</span><p className="text-sm text-slate-400">Total views ÷ total videos</p></div>
-                                            <div><span className="text-white font-medium">Views per Sub</span><p className="text-sm text-slate-400">Total views ÷ subscribers — higher means content reaches beyond subscribers</p></div>
-                                            <div><span className="text-white font-medium">Top Video Multiplier</span><p className="text-sm text-slate-400">Top video views ÷ average views — shows viral potential</p></div>
-                                            <div><span className="text-white font-medium">Avg Like Ratio</span><p className="text-sm text-slate-400">Likes as percentage of views — measures audience approval</p></div>
-                                            <div><span className="text-white font-medium">Shorts Percentage</span><p className="text-sm text-slate-400">Videos under 60 seconds as % of recent uploads</p></div>
-                                            <div><span className="text-white font-medium">Days to YPP</span><p className="text-sm text-slate-400">Estimated days to reach 1,000 subscribers based on current growth rate</p></div>
-                                            <div><span className="text-white font-medium">Milestone Progress</span><p className="text-sm text-slate-400">Percentage progress toward the next subscriber milestone</p></div>
-                                            <div><span className="text-white font-medium">Est. Monthly Views</span><p className="text-sm text-slate-400">Projected monthly views based on recent video performance and upload frequency</p></div>
-                                        </div>
-                                    </div>
-
-                                </div>
+                    {/* Footer */}
+                    <div className="border-t border-slate-800 mt-16">
+                        <div className="max-w-7xl mx-auto px-6 py-12">
+                            <div className="text-center">
+                                <p className="text-slate-400 mb-4">
+                                    Part of the <span className="text-cyan-400 font-semibold">Grounded Life</span> community
+                                </p>
+                                <p className="text-slate-500 text-sm">
+                                    Normal YouTube monetization rate is less than 0.25%. The Grounded Life community achieves {stats?.monetizationRate}% - 
+                                    that's <span className="text-cyan-400 font-bold">144x better</span> than the industry average.
+                                </p>
+                                <p className="text-slate-600 text-xs mt-4">
+                                    Follow the guidance from Rob and Allie to accelerate your YouTube success.
+                                </p>
                             </div>
                         </div>
-                    )}
+                    </div>
                 </div>
             );
-        };
-
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        }
+        
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<GroundedLifeTracker />);
     </script>
 </body>
 </html>
