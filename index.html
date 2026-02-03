@@ -259,7 +259,7 @@
                         <div className="relative h-40 bg-gradient-to-br from-cyan-900/50 to-purple-900/50">
                             {channel.bannerUrl && <img src={channel.bannerUrl} alt="" className="absolute inset-0 w-full h-full object-cover opacity-40"/>}
                             <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
-                            <button onClick={onClose} className="absolute top-4 right-4 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"><Icons.Close /></button>
+                            <button onClick={(e) => { e.stopPropagation(); onClose(); }} className="absolute top-4 right-4 p-2 rounded-full bg-black/50 hover:bg-black/70 transition-colors"><Icons.Close /></button>
                             <div className="absolute bottom-0 left-0 right-0 p-6 flex items-end gap-4">
                                 <div className="relative">
                                     <img src={channel.thumbnailUrl} alt={channel.channelName} className="w-20 h-20 rounded-xl border-4 border-slate-900"/>
@@ -451,6 +451,7 @@
             const [channels, setChannels] = React.useState([]);
             const [stats, setStats] = React.useState({ totalChannels: 0, matureChannels: 0, monetizedChannels: 0, monetizationRate: 0 });
             const [leaderboard, setLeaderboard] = React.useState({});
+            const [recentMilestones, setRecentMilestones] = React.useState([]);
             const [loading, setLoading] = React.useState(true);
             const [searchTerm, setSearchTerm] = React.useState('');
             const [sortBy, setSortBy] = React.useState('subscribers');
@@ -466,6 +467,7 @@
                         setChannels(data.channels || []);
                         setStats(data.stats || {});
                         setLeaderboard(data.leaderboard || {});
+                        setRecentMilestones(data.recentMilestones || []);
                     } catch (error) {
                         console.error('Error:', error);
                     } finally {
@@ -535,6 +537,29 @@
                     <div className="max-w-7xl mx-auto px-6 py-6">
                         {/* Weekly Leaderboard */}
                         <Leaderboard leaderboard={leaderboard} />
+
+                        {/* Recent Milestones */}
+                        {recentMilestones.length > 0 && (
+                            <div className="glass rounded-2xl border border-purple-700/30 p-5 mb-6">
+                                <h2 className="text-xl font-bold text-purple-400 mb-4 flex items-center gap-2">
+                                    <Icons.Target /> 🎉 Recent Milestones
+                                </h2>
+                                <div className="space-y-2">
+                                    {recentMilestones.slice(0, 5).map((milestone, idx) => (
+                                        <div key={idx} className="flex items-center gap-3 p-3 rounded-lg bg-slate-800/30">
+                                            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center flex-shrink-0">
+                                                <Icons.Award />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="font-semibold text-white">{milestone.channelName}</div>
+                                                <div className="text-sm text-slate-400">{milestone.friendName} reached {formatNumber(milestone.value)} {milestone.type.toLowerCase()}</div>
+                                            </div>
+                                            <div className="text-xs text-slate-500">{new Date(milestone.date).toLocaleDateString()}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Filters */}
                         <div className="flex flex-col md:flex-row gap-4 mb-6">
