@@ -220,7 +220,7 @@
                                                             idx === 1 ? 'text-slate-300' :
                                                             'text-slate-400'
                                                         }`}>
-                                                            {entry.value}
+                                                            {category.key === 'Highest Growth %' ? `${(parseFloat(entry.value) * 100).toFixed(1)}%` : entry.value}
                                                         </div>
                                                     </div>
                                                 ))}
