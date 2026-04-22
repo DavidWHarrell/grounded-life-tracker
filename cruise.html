@@ -311,13 +311,9 @@
   </div>
 
   <script>
-    // ===== CONFIG =====
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6uXFFccCBACibjsgMgadNqJzwJ4C2VMlfU1vv0IgtK2GEsi6GQLtsFlHl7GvtMAR9/exec';
-    // ===== STATE =====
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6uXFFccCBACibjsgMgadNqJzwJ4C2VMlfU1vv0IgtK2GEsi6GQLtsFlHl7GvtMAR9/exec';
     let allChannels = [];
- 
 
-    // ===== STARS =====
     const starsEl = document.getElementById('stars');
     for (let i = 0; i < 80; i++) {
       const s = document.createElement('div');
@@ -327,20 +323,18 @@
       starsEl.appendChild(s);
     }
 
- async function loadChannels() {
-    try {
-        const res = await fetch(SCRIPT_URL + '?nocache=' + Date.now(), {
-            redirect: 'follow'
-        });
+    async function loadChannels() {
+      try {
+        const res = await fetch(SCRIPT_URL + '?nocache=' + Date.now(), { redirect: 'follow' });
         const text = await res.text();
         const data = JSON.parse(text);
         allChannels = data.channels.sort((a, b) => a.channelName.localeCompare(b.channelName));
         renderChannels(allChannels);
-    } catch (err) {
+      } catch (err) {
         document.getElementById('channelList').innerHTML =
-            '<div class="loading" style="color:#fca5a5">Failed to load channels: ' + err.message + '</div>';
+          '<div class="loading" style="color:#fca5a5">Failed to load channels: ' + err.message + '</div>';
+      }
     }
-}
 
     function renderChannels(channels) {
       const list = document.getElementById('channelList');
@@ -349,109 +343,91 @@
         return;
       }
       list.innerHTML = channels.map(ch => `
-        <div class="channel-item${ch.onCruise ? ' selected' : ''}" onclick="selectChannel('${ch.channelId}')" id="item-${ch.channelId}">
+        <div class="channel-item${(ch.onCruise || ch.selected) ? ' selected' : ''}" onclick="selectChannel('${ch.channelId}')" id="item-${ch.channelId}">
           <img src="${ch.thumbnailUrl}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 36 36%22><rect width=%2236%22 height=%2236%22 rx=%2218%22 fill=%22%231e3a5f%22/></svg>'">
           <div class="channel-info">
             <div class="channel-name">${ch.channelName}${ch.onCruise ? '<span class="already-on">✓ Registered</span>' : ''}</div>
             <div class="channel-friend">${ch.friend}</div>
           </div>
-          <div class="channel-check" id="check-${ch.channelId}">${ch.onCruise ? '✓' : ''}</div>
+          <div class="channel-check" id="check-${ch.channelId}">${(ch.onCruise || ch.selected) ? '✓' : ''}</div>
         </div>
       `).join('');
     }
 
     function filterChannels() {
       const q = document.getElementById('search').value.toLowerCase();
-      const filtered = allChannels.filter(ch =>
+      renderChannels(allChannels.filter(ch =>
         ch.channelName.toLowerCase().includes(q) || ch.friend.toLowerCase().includes(q)
-      );
-      renderChannels(filtered);
+      ));
     }
 
-   function selectChannel(channelId) {
-    const item = document.getElementById('item-' + channelId);
-    const check = document.getElementById('check-' + channelId);
-    const ch = allChannels.find(c => c.channelId === channelId);
-    if (!ch) return;
-
-    ch.selected = !ch.selected;
-
-    if (ch.selected) {
-        item.classList.add('selected');
-        check.textContent = '✓';
-    } else {
-        item.classList.remove('selected');
-        check.textContent = ch.onCruise ? '✓' : '';
-        if (!ch.onCruise) item.classList.remove('selected');
+    function selectChannel(channelId) {
+      const ch = allChannels.find(c => c.channelId === channelId);
+      if (!ch) return;
+      ch.selected = !ch.selected;
+      const item = document.getElementById('item-' + channelId);
+      const check = document.getElementById('check-' + channelId);
+      if (item) item.classList.toggle('selected', ch.selected || ch.onCruise);
+      if (check) check.textContent = (ch.selected || ch.onCruise) ? '✓' : '';
+      updateSelectedPreview();
     }
 
-    updateSelectedPreview();
-}
-
-function updateSelectedPreview() {
-    const selected = allChannels.filter(c => c.selected);
-    const preview = document.getElementById('selectedPreview');
-    const btn = document.getElementById('submitBtn');
-
-    if (selected.length === 0) {
+    function updateSelectedPreview() {
+      const selected = allChannels.filter(c => c.selected);
+      const preview = document.getElementById('selectedPreview');
+      const btn = document.getElementById('submitBtn');
+      if (selected.length === 0) {
         preview.classList.remove('visible');
         btn.disabled = true;
-        btn.textContent = ' 🛳️ I\'m Going on the Cruise!';
-    } else {
+        btn.textContent = '🛳️ I\'m Going on the Cruise!';
+      } else {
         preview.classList.add('visible');
         document.getElementById('selectedImg').src = selected[0].thumbnailUrl;
         document.getElementById('selectedName').textContent = selected.length === 1
-            ? selected[0].channelName
-            : selected.length + ' channels selected';
+          ? selected[0].channelName
+          : selected.length + ' channels selected';
         btn.disabled = false;
-        btn.textContent = ` 🛳️ Register ${selected.length} Channel${selected.length > 1 ? 's' : ''} for the Cruise!`;
+        btn.textContent = `🛳️ Register ${selected.length} Channel${selected.length > 1 ? 's' : ''} for the Cruise!`;
+      }
     }
-}
 
-
-    // ===== SUBMIT =====
     async function submitRegistration() {
-    const selected = allChannels.filter(c => c.selected);
-    if (selected.length === 0) return;
-
-    const btn = document.getElementById('submitBtn');
-    const statusEl = document.getElementById('status');
-    btn.disabled = true;
-    btn.textContent = 'Registering... ⏳';
-    statusEl.className = 'status';
-
-    try {
+      const selected = allChannels.filter(c => c.selected);
+      if (selected.length === 0) return;
+      const btn = document.getElementById('submitBtn');
+      const statusEl = document.getElementById('status');
+      btn.disabled = true;
+      btn.textContent = 'Registering... ⏳';
+      statusEl.className = 'status';
+      try {
         const results = [];
         for (const ch of selected) {
-            const url = SCRIPT_URL + '?action=setCruise&channelId=' + encodeURIComponent(ch.channelId) + '&value=true';
-            const res = await fetch(url);
-            const data = await res.json();
-            if (data.cruiseSet) {
-                ch.onCruise = true;
-                ch.selected = false;
-                results.push(ch.channelName);
-            }
+          const url = SCRIPT_URL + '?action=setCruise&channelId=' + encodeURIComponent(ch.channelId) + '&value=true';
+          const res = await fetch(url);
+          const data = await res.json();
+          if (data.cruiseSet) {
+            ch.onCruise = true;
+            ch.selected = false;
+            results.push(ch.channelName);
+          }
         }
-
         if (results.length > 0) {
-            statusEl.className = 'status success';
-            statusEl.textContent = '🎉 Registered: ' + results.join(', ') + ' — See you on the ship!';
-            btn.textContent = '✓ Registered!';
-            renderChannels(allChannels.filter(c =>
-                c.channelName.toLowerCase().includes(document.getElementById('search').value.toLowerCase()) ||
-                c.friend.toLowerCase().includes(document.getElementById('search').value.toLowerCase())
-            ));
-            updateSelectedPreview();
+          statusEl.className = 'status success';
+          statusEl.textContent = '🎉 Registered: ' + results.join(', ') + ' — See you on the ship!';
+          btn.textContent = '✓ Registered!';
+          filterChannels();
+          updateSelectedPreview();
         } else {
-            throw new Error('No channels were registered');
+          throw new Error('No channels were registered');
         }
-    } catch (err) {
+      } catch (err) {
         statusEl.className = 'status error';
         statusEl.textContent = '❌ Something went wrong: ' + err.message;
         btn.disabled = false;
-        btn.textContent = ' 🛳️ I\'m Going on the Cruise!';
+        btn.textContent = '🛳️ I\'m Going on the Cruise!';
+      }
     }
-}
+
     loadChannels();
   </script>
 </body>
