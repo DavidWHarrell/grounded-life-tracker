@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title><img src="cruise-ship.png" alt="cruise ship" style="height: 80px; width: auto;"> Grounded Life Cruise 2026</title>
+  <title>🛳️ Grounded Life Cruise 2026</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -15,7 +15,6 @@
       overflow-x: hidden;
     }
 
-    /* Ocean animation */
     .ocean {
       position: fixed;
       bottom: 0;
@@ -45,19 +44,18 @@
 
     .ship {
       position: fixed;
-      bottom: 60px;
-      font-size: 3rem;
+      bottom: 70px;
+      left: 0;
       animation: sail 30s linear infinite;
-      z-index: 1;
+      z-index: 9999;
       pointer-events: none;
       filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
     }
     @keyframes sail {
-      0%   { left: -100px; }
-      100% { left: calc(100% + 100px); }
+      0%   { transform: translateX(-150px); }
+      100% { transform: translateX(calc(100vw + 150px)); }
     }
 
-    /* Stars */
     .stars {
       position: fixed;
       top: 0; left: 0;
@@ -163,7 +161,7 @@
     .channel-item:hover { background: rgba(56,189,248,0.1); }
     .channel-item.selected { background: rgba(56,189,248,0.18); }
 
-    .channel-item img {
+    .channel-item img.thumb {
       width: 36px; height: 36px;
       border-radius: 50%;
       object-fit: cover;
@@ -204,8 +202,10 @@
       margin-top: 12px;
       font-size: 0.9rem;
       color: #7dd3fc;
+      align-items: center;
+      gap: 10px;
     }
-    .selected-preview.visible { display: flex; align-items: center; gap: 10px; }
+    .selected-preview.visible { display: flex; }
     .selected-preview img { width: 28px; height: 28px; border-radius: 50%; }
 
     .btn {
@@ -218,6 +218,10 @@
       cursor: pointer;
       transition: all 0.2s;
       letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
     .btn-primary {
       background: linear-gradient(135deg, #0ea5e9, #0284c7);
@@ -266,15 +270,15 @@
 </head>
 <body>
 
-  <!-- Stars -->
   <div class="stars" id="stars"></div>
 
-  <!-- Ocean -->
   <div class="ocean">
     <div class="wave"></div>
     <div class="wave wave2"></div>
   </div>
-  <div class="ship"> <img src="cruise-ship.png" alt="cruise ship" style="height: 80px; width: auto;"></div>
+  <div class="ship">
+    <img src="cruise-ship.png" alt="cruise ship" style="height: 80px; width: auto;">
+  </div>
 
   <div class="container">
     <div class="header">
@@ -299,7 +303,8 @@
     </div>
 
     <button class="btn btn-primary" id="submitBtn" onclick="submitRegistration()" disabled>
-       <img src="cruise-ship.png" alt="cruise ship" style="height: 80px; width: auto;"> I'm Going on the Cruise!
+      <img src="cruise-ship.png" alt="" style="height: 20px; width: auto; vertical-align: middle;">
+      I'm Going on the Cruise!
     </button>
 
     <div class="status" id="status"></div>
@@ -311,7 +316,7 @@
   </div>
 
   <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6uXFFccCBACibjsgMgadNqJzwJ4C2VMlfU1vv0IgtK2GEsi6GQLtsFlHl7GvtMAR9/exec';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6uXFFccCBACibjsgMgadNqJzwJ4C2VMlfU1vv0IgtK2GEsi6GQLtsFlHl7GvtMAR9/exec';
     let allChannels = [];
 
     const starsEl = document.getElementById('stars');
@@ -344,7 +349,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6uXFFccCBACibjsgMg
       }
       list.innerHTML = channels.map(ch => `
         <div class="channel-item${(ch.onCruise || ch.selected) ? ' selected' : ''}" onclick="selectChannel('${ch.channelId}')" id="item-${ch.channelId}">
-          <img src="${ch.thumbnailUrl}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 36 36%22><rect width=%2236%22 height=%2236%22 rx=%2218%22 fill=%22%231e3a5f%22/></svg>'">
+          <img class="thumb" src="${ch.thumbnailUrl}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 36 36%22><rect width=%2236%22 height=%2236%22 rx=%2218%22 fill=%22%231e3a5f%22/></svg>'">
           <div class="channel-info">
             <div class="channel-name">${ch.channelName}${ch.onCruise ? '<span class="already-on">✓ Registered</span>' : ''}</div>
             <div class="channel-friend">${ch.friend}</div>
@@ -379,7 +384,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6uXFFccCBACibjsgMg
       if (selected.length === 0) {
         preview.classList.remove('visible');
         btn.disabled = true;
-        btn.textContent = '<img src="cruise-ship.png" alt="cruise ship" style="height: 80px; width: auto;"> I\'m Going on the Cruise!';
+        btn.innerHTML = '<img src="cruise-ship.png" alt="" style="height:20px;width:auto;vertical-align:middle;"> I\'m Going on the Cruise!';
       } else {
         preview.classList.add('visible');
         document.getElementById('selectedImg').src = selected[0].thumbnailUrl;
@@ -387,7 +392,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6uXFFccCBACibjsgMg
           ? selected[0].channelName
           : selected.length + ' channels selected';
         btn.disabled = false;
-        btn.textContent = `<img src="cruise-ship.png" alt="cruise ship" style="height: 80px; width: auto;"> Register ${selected.length} Channel${selected.length > 1 ? 's' : ''} for the Cruise!`;
+        btn.innerHTML = `<img src="cruise-ship.png" alt="" style="height:20px;width:auto;vertical-align:middle;"> Register ${selected.length} Channel${selected.length > 1 ? 's' : ''} for the Cruise!`;
       }
     }
 
@@ -397,7 +402,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6uXFFccCBACibjsgMg
       const btn = document.getElementById('submitBtn');
       const statusEl = document.getElementById('status');
       btn.disabled = true;
-      btn.textContent = 'Registering... ⏳';
+      btn.innerHTML = 'Registering... ⏳';
       statusEl.className = 'status';
       try {
         const results = [];
@@ -414,7 +419,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6uXFFccCBACibjsgMg
         if (results.length > 0) {
           statusEl.className = 'status success';
           statusEl.textContent = '🎉 Registered: ' + results.join(', ') + ' — See you on the ship!';
-          btn.textContent = '✓ Registered!';
+          btn.innerHTML = '✓ Registered!';
           filterChannels();
           updateSelectedPreview();
         } else {
@@ -424,7 +429,7 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6uXFFccCBACibjsgMg
         statusEl.className = 'status error';
         statusEl.textContent = '❌ Something went wrong: ' + err.message;
         btn.disabled = false;
-        btn.textContent = '<img src="cruise-ship.png" alt="cruise ship" style="height: 80px; width: auto;"> I\'m Going on the Cruise!';
+        btn.innerHTML = '<img src="cruise-ship.png" alt="" style="height:20px;width:auto;vertical-align:middle;"> I\'m Going on the Cruise!';
       }
     }
 
