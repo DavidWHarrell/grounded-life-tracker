@@ -358,12 +358,6 @@
           <div class="channel-check" id="check-${ch.channelId}">${ch.onCruise ? '✓' : ''}</div>
         </div>
       `).join('');
-
-      // Restore selection if already set
-      if (selectedChannelId) {
-        const ch = allChannels.find(c => c.channelId === selectedChannelId);
-        if (ch) updateSelection(ch);
-      }
     }
 
     function filterChannels() {
@@ -413,12 +407,7 @@ function updateSelectedPreview() {
         btn.textContent = ` 🛳️ Register ${selected.length} Channel${selected.length > 1 ? 's' : ''} for the Cruise!`;
     }
 }
-    function updateSelection(ch) {
-      document.getElementById('selectedImg').src = ch.thumbnailUrl;
-      document.getElementById('selectedName').textContent = ch.channelName + (ch.friend ? ' · ' + ch.friend : '');
-      document.getElementById('selectedPreview').classList.add('visible');
-      document.getElementById('submitBtn').disabled = false;
-    }
+
 
     // ===== SUBMIT =====
     async function submitRegistration() {
