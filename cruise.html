@@ -372,20 +372,45 @@
       renderChannels(filtered);
     }
 
-    function selectChannel(channelId) {
-      selectedChannelId = channelId;
-      const ch = allChannels.find(c => c.channelId === channelId);
-      if (ch) updateSelection(ch);
+   function selectChannel(channelId) {
+    const item = document.getElementById('item-' + channelId);
+    const check = document.getElementById('check-' + channelId);
+    const ch = allChannels.find(c => c.channelId === channelId);
+    if (!ch) return;
 
-      // Update UI
-      document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('selected'));
-      document.querySelectorAll('.channel-check').forEach(el => { el.textContent = ''; });
-      const item = document.getElementById('item-' + channelId);
-      const check = document.getElementById('check-' + channelId);
-      if (item) item.classList.add('selected');
-      if (check) check.textContent = '✓';
+    ch.selected = !ch.selected;
+
+    if (ch.selected) {
+        item.classList.add('selected');
+        check.textContent = '✓';
+    } else {
+        item.classList.remove('selected');
+        check.textContent = ch.onCruise ? '✓' : '';
+        if (!ch.onCruise) item.classList.remove('selected');
     }
 
+    updateSelectedPreview();
+}
+
+function updateSelectedPreview() {
+    const selected = allChannels.filter(c => c.selected);
+    const preview = document.getElementById('selectedPreview');
+    const btn = document.getElementById('submitBtn');
+
+    if (selected.length === 0) {
+        preview.classList.remove('visible');
+        btn.disabled = true;
+        btn.textContent = '🚢 I\'m Going on the Cruise!';
+    } else {
+        preview.classList.add('visible');
+        document.getElementById('selectedImg').src = selected[0].thumbnailUrl;
+        document.getElementById('selectedName').textContent = selected.length === 1
+            ? selected[0].channelName
+            : selected.length + ' channels selected';
+        btn.disabled = false;
+        btn.textContent = `🚢 Register ${selected.length} Channel${selected.length > 1 ? 's' : ''} for the Cruise!`;
+    }
+}
     function updateSelection(ch) {
       document.getElementById('selectedImg').src = ch.thumbnailUrl;
       document.getElementById('selectedName').textContent = ch.channelName + (ch.friend ? ' · ' + ch.friend : '');
@@ -395,7 +420,9 @@
 
     // ===== SUBMIT =====
     async function submitRegistration() {
-    if (!selectedChannelId) return;
+    const selected = allChannels.filter(c => c.selected);
+    if (selected.length === 0) return;
+
     const btn = document.getElementById('submitBtn');
     const statusEl = document.getElementById('status');
     btn.disabled = true;
@@ -403,17 +430,29 @@
     statusEl.className = 'status';
 
     try {
-        const url = SCRIPT_URL + '?action=setCruise&channelId=' + encodeURIComponent(selectedChannelId) + '&value=true';
-        const res = await fetch(url);
-        const data = await res.json();
-        if (data.cruiseSet) {
+        const results = [];
+        for (const ch of selected) {
+            const url = SCRIPT_URL + '?action=setCruise&channelId=' + encodeURIComponent(ch.channelId) + '&value=true';
+            const res = await fetch(url);
+            const data = await res.json();
+            if (data.cruiseSet) {
+                ch.onCruise = true;
+                ch.selected = false;
+                results.push(ch.channelName);
+            }
+        }
+
+        if (results.length > 0) {
             statusEl.className = 'status success';
-            statusEl.textContent = '🎉 ' + data.channelName + ' is on the cruise list! See you on the ship!';
+            statusEl.textContent = '🎉 Registered: ' + results.join(', ') + ' — See you on the ship!';
             btn.textContent = '✓ Registered!';
-            const ch = allChannels.find(c => c.channelId === selectedChannelId);
-            if (ch) ch.onCruise = true;
+            renderChannels(allChannels.filter(c =>
+                c.channelName.toLowerCase().includes(document.getElementById('search').value.toLowerCase()) ||
+                c.friend.toLowerCase().includes(document.getElementById('search').value.toLowerCase())
+            ));
+            updateSelectedPreview();
         } else {
-            throw new Error(data.error || 'Unknown error');
+            throw new Error('No channels were registered');
         }
     } catch (err) {
         statusEl.className = 'status error';
@@ -422,7 +461,6 @@
         btn.textContent = '🚢 I\'m Going on the Cruise!';
     }
 }
-
     loadChannels();
   </script>
 </body>
