@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚢 Grounded Life Cruise 2026</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(180deg, #0a1628 0%, #0d2b4e 40%, #1a5276 100%);
+      min-height: 100vh;
+      color: #e2e8f0;
+      overflow-x: hidden;
+    }
+
+    /* Ocean animation */
+    .ocean {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 120px;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .wave {
+      position: absolute;
+      bottom: 0;
+      width: 200%;
+      height: 80px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 80'%3E%3Cpath d='M0,40 C150,80 350,0 600,40 C850,80 1050,0 1200,40 L1200,80 L0,80 Z' fill='%23164e7a' fill-opacity='0.6'/%3E%3C/svg%3E") repeat-x;
+      animation: wave 8s linear infinite;
+    }
+    .wave2 {
+      bottom: 10px;
+      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 80'%3E%3Cpath d='M0,50 C200,10 400,70 600,50 C800,30 1000,70 1200,50 L1200,80 L0,80 Z' fill='%231a6090' fill-opacity='0.4'/%3E%3C/svg%3E") repeat-x;
+      animation: wave 12s linear infinite reverse;
+    }
+    @keyframes wave {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+    .ship {
+      position: fixed;
+      bottom: 60px;
+      font-size: 3rem;
+      animation: sail 30s linear infinite;
+      z-index: 1;
+      pointer-events: none;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+    }
+    @keyframes sail {
+      0%   { left: -100px; }
+      100% { left: calc(100% + 100px); }
+    }
+
+    /* Stars */
+    .stars {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 60%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      animation: twinkle 3s infinite alternate;
+    }
+    @keyframes twinkle {
+      0% { opacity: 0.2; } 100% { opacity: 1; }
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 40px 20px 160px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .header .emoji { font-size: 3.5rem; display: block; margin-bottom: 12px; }
+    .header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #7dd3fc, #38bdf8, #0ea5e9);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    .header p { color: #94a3b8; font-size: 1rem; line-height: 1.6; }
+
+    .card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 16px;
+      padding: 28px;
+      backdrop-filter: blur(12px);
+      margin-bottom: 16px;
+    }
+
+    .card label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #7dd3fc;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+    }
+
+    .search-wrap { position: relative; margin-bottom: 12px; }
+    .search-wrap input {
+      width: 100%;
+      padding: 12px 16px 12px 42px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px;
+      color: #e2e8f0;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .search-wrap input:focus { border-color: #38bdf8; }
+    .search-wrap input::placeholder { color: #64748b; }
+    .search-icon {
+      position: absolute;
+      left: 14px; top: 50%;
+      transform: translateY(-50%);
+      color: #64748b;
+      font-size: 1rem;
+    }
+
+    .channel-list {
+      max-height: 320px;
+      overflow-y: auto;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .channel-list::-webkit-scrollbar { width: 6px; }
+    .channel-list::-webkit-scrollbar-track { background: transparent; }
+    .channel-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+
+    .channel-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .channel-item:last-child { border-bottom: none; }
+    .channel-item:hover { background: rgba(56,189,248,0.1); }
+    .channel-item.selected { background: rgba(56,189,248,0.18); }
+
+    .channel-item img {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #1e3a5f;
+    }
+    .channel-info { flex: 1; min-width: 0; }
+    .channel-name {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #e2e8f0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .channel-friend { font-size: 0.78rem; color: #64748b; }
+    .channel-check {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      font-size: 0.75rem;
+    }
+    .channel-item.selected .channel-check {
+      background: #38bdf8;
+      border-color: #38bdf8;
+      color: #0a1628;
+    }
+
+    .selected-preview {
+      display: none;
+      background: rgba(56,189,248,0.1);
+      border: 1px solid rgba(56,189,248,0.3);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-top: 12px;
+      font-size: 0.9rem;
+      color: #7dd3fc;
+    }
+    .selected-preview.visible { display: flex; align-items: center; gap: 10px; }
+    .selected-preview img { width: 28px; height: 28px; border-radius: 50%; }
+
+    .btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #0ea5e9, #0284c7);
+      color: white;
+      box-shadow: 0 4px 20px rgba(14,165,233,0.3);
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(14,165,233,0.45);
+    }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .status {
+      margin-top: 16px;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-align: center;
+      display: none;
+    }
+    .status.success {
+      display: block;
+      background: rgba(34,197,94,0.15);
+      border: 1px solid rgba(34,197,94,0.3);
+      color: #86efac;
+    }
+    .status.error {
+      display: block;
+      background: rgba(239,68,68,0.15);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5;
+    }
+
+    .loading { text-align: center; color: #64748b; padding: 24px; }
+    .already-on { font-size: 0.8rem; color: #38bdf8; margin-left: 4px; }
+
+    .note {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #475569;
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Stars -->
+  <div class="stars" id="stars"></div>
+
+  <!-- Ocean -->
+  <div class="ocean">
+    <div class="wave"></div>
+    <div class="wave wave2"></div>
+  </div>
+  <div class="ship">🚢</div>
+
+  <div class="container">
+    <div class="header">
+      <span class="emoji">⚓</span>
+      <h1>Grounded Life Cruise 2026</h1>
+      <p>Going on the cruise? Mark your channel so the community<br>can cheer you on during your adventure!</p>
+    </div>
+
+    <div class="card">
+      <label>Find Your Channel</label>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search" placeholder="Search by name..." oninput="filterChannels()">
+      </div>
+      <div class="channel-list" id="channelList">
+        <div class="loading">Loading channels... ⏳</div>
+      </div>
+      <div class="selected-preview" id="selectedPreview">
+        <img id="selectedImg" src="" alt="">
+        <span id="selectedName"></span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" id="submitBtn" onclick="submitRegistration()" disabled>
+      🚢 I'm Going on the Cruise!
+    </button>
+
+    <div class="status" id="status"></div>
+
+    <p class="note">
+      Already registered? You can re-select your channel to confirm.<br>
+      Contact the community admin to remove your registration.
+    </p>
+  </div>
+
+  <script>
+    // ===== CONFIG =====
+    const SCRIPT_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL';
+
+    // ===== STATE =====
+    let allChannels = [];
+    let selectedChannelId = null;
+
+    // ===== STARS =====
+    const starsEl = document.getElementById('stars');
+    for (let i = 0; i < 80; i++) {
+      const s = document.createElement('div');
+      s.className = 'star';
+      const size = Math.random() * 2.5 + 0.5;
+      s.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${2+Math.random()*3}s`;
+      starsEl.appendChild(s);
+    }
+
+    // ===== LOAD CHANNELS =====
+    async function loadChannels() {
+      try {
+        const res = await fetch(SCRIPT_URL);
+        const data = await res.json();
+        allChannels = data.channels.sort((a, b) => a.channelName.localeCompare(b.channelName));
+        renderChannels(allChannels);
+      } catch (err) {
+        document.getElementById('channelList').innerHTML =
+          '<div class="loading" style="color:#fca5a5">Failed to load channels. Please refresh.</div>';
+      }
+    }
+
+    function renderChannels(channels) {
+      const list = document.getElementById('channelList');
+      if (channels.length === 0) {
+        list.innerHTML = '<div class="loading">No channels found</div>';
+        return;
+      }
+      list.innerHTML = channels.map(ch => `
+        <div class="channel-item${ch.onCruise ? ' selected' : ''}" onclick="selectChannel('${ch.channelId}')" id="item-${ch.channelId}">
+          <img src="${ch.thumbnailUrl}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 36 36%22><rect width=%2236%22 height=%2236%22 rx=%2218%22 fill=%22%231e3a5f%22/></svg>'">
+          <div class="channel-info">
+            <div class="channel-name">${ch.channelName}${ch.onCruise ? '<span class="already-on">✓ Registered</span>' : ''}</div>
+            <div class="channel-friend">${ch.friend}</div>
+          </div>
+          <div class="channel-check" id="check-${ch.channelId}">${ch.onCruise ? '✓' : ''}</div>
+        </div>
+      `).join('');
+
+      // Restore selection if already set
+      if (selectedChannelId) {
+        const ch = allChannels.find(c => c.channelId === selectedChannelId);
+        if (ch) updateSelection(ch);
+      }
+    }
+
+    function filterChannels() {
+      const q = document.getElementById('search').value.toLowerCase();
+      const filtered = allChannels.filter(ch =>
+        ch.channelName.toLowerCase().includes(q) || ch.friend.toLowerCase().includes(q)
+      );
+      renderChannels(filtered);
+    }
+
+    function selectChannel(channelId) {
+      selectedChannelId = channelId;
+      const ch = allChannels.find(c => c.channelId === channelId);
+      if (ch) updateSelection(ch);
+
+      // Update UI
+      document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('selected'));
+      document.querySelectorAll('.channel-check').forEach(el => { el.textContent = ''; });
+      const item = document.getElementById('item-' + channelId);
+      const check = document.getElementById('check-' + channelId);
+      if (item) item.classList.add('selected');
+      if (check) check.textContent = '✓';
+    }
+
+    function updateSelection(ch) {
+      document.getElementById('selectedImg').src = ch.thumbnailUrl;
+      document.getElementById('selectedName').textContent = ch.channelName + (ch.friend ? ' · ' + ch.friend : '');
+      document.getElementById('selectedPreview').classList.add('visible');
+      document.getElementById('submitBtn').disabled = false;
+    }
+
+    // ===== SUBMIT =====
+    async function submitRegistration() {
+      if (!selectedChannelId) return;
+      const btn = document.getElementById('submitBtn');
+      const statusEl = document.getElementById('status');
+      btn.disabled = true;
+      btn.textContent = 'Registering... ⏳';
+      statusEl.className = 'status';
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'setCruise', channelId: selectedChannelId, value: true })
+        });
+        const data = await res.json();
+        if (data.success) {
+          statusEl.className = 'status success';
+          statusEl.textContent = '🎉 ' + data.channelName + ' is on the cruise list! See you on the ship!';
+          btn.textContent = '✓ Registered!';
+          // Update local state
+          const ch = allChannels.find(c => c.channelId === selectedChannelId);
+          if (ch) ch.onCruise = true;
+        } else {
+          throw new Error(data.error || 'Unknown error');
+        }
+      } catch (err) {
+        statusEl.className = 'status error';
+        statusEl.textContent = '❌ Something went wrong: ' + err.message;
+        btn.disabled = false;
+        btn.textContent = '🚢 I\'m Going on the Cruise!';
+      }
+    }
+
+    loadChannels();
+  </script>
+</body>
+</html>
