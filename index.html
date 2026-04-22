@@ -474,9 +474,9 @@
                             </div>
                         )}
 
-                        {/* Search and Filters */}
+                       {/* Search and Filters */}
                         <div className="glass rounded-xl p-6 mb-6">
-                            <div className="grid md:grid-cols-3 gap-4">
+                            <div className="grid md:grid-cols-3 gap-4 mb-4">
                                 <div className="relative">
                                     <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
                                         <Icons.Search />
@@ -485,57 +485,46 @@
                                         type="text"
                                         placeholder="Search channels or creators..."
                                         className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-cyan-400 transition-colors"
-       {/* Search and Filters */}
-<div className="glass rounded-xl p-6 mb-6">
-    <div className="grid md:grid-cols-3 gap-4 mb-4">
-        <div className="relative">
-            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                <Icons.Search />
-            </div>
-            <input
-                type="text"
-                placeholder="Search channels or creators..."
-                className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-cyan-400 transition-colors"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-            />
-        </div>
-        <select
-            className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-400 transition-colors"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-        >
-            <option value="all">All Channels</option>
-            <option value="monetized">Monetized Only</option>
-            <option value="mature">Mature Channels</option>
-            <option value="active">Active Only</option>
-        </select>
-        <select
-            className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-400 transition-colors"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-        >
-            <option value="subscribers">Sort by Subscribers</option>
-            <option value="views">Sort by Views</option>
-            <option value="videos">Sort by Videos</option>
-            <option value="growth">Sort by Growth</option>
-            <option value="momentum">Sort by Momentum</option>
-        </select>
-    </div>
-    <button
-        onClick={() => setFilterCruise(!filterCruise)}
-        className={`w-full py-2 rounded-lg font-semibold transition-all duration-300 border ${
-            filterCruise
-                ? 'bg-sky-500/20 border-sky-400 text-sky-300 shadow-lg shadow-sky-500/20'
-                : 'bg-white/5 border-white/10 text-gray-400 hover:border-sky-400/50 hover:text-sky-400'
-        }`}
-    >
-        🚢 {filterCruise ? 'Showing Cruise Crew Only' : 'Show Cruise Crew'}
-        {filterCruise && data.channels.filter(c => c.onCruise).length > 0 &&
-            ` (${data.channels.filter(c => c.onCruise).length} channels)`
-        }
-    </button>
-</div>
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                                <select
+                                    className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-400 transition-colors"
+                                    value={filterStatus}
+                                    onChange={(e) => setFilterStatus(e.target.value)}
+                                >
+                                    <option value="all">All Channels</option>
+                                    <option value="monetized">Monetized Only</option>
+                                    <option value="mature">Mature Channels</option>
+                                    <option value="active">Active Only</option>
+                                </select>
+                                <select
+                                    className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-400 transition-colors"
+                                    value={sortBy}
+                                    onChange={(e) => setSortBy(e.target.value)}
+                                >
+                                    <option value="subscribers">Sort by Subscribers</option>
+                                    <option value="views">Sort by Views</option>
+                                    <option value="videos">Sort by Videos</option>
+                                    <option value="growth">Sort by Growth</option>
+                                    <option value="momentum">Sort by Momentum</option>
+                                </select>
+                            </div>
+                            <button
+                                onClick={() => setFilterCruise(!filterCruise)}
+                                className={`w-full py-2 rounded-lg font-semibold transition-all duration-300 border ${
+                                    filterCruise
+                                        ? 'bg-sky-500/20 border-sky-400 text-sky-300 shadow-lg shadow-sky-500/20'
+                                        : 'bg-white/5 border-white/10 text-gray-400 hover:border-sky-400/50 hover:text-sky-400'
+                                }`}
+                            >
+                                🚢 {filterCruise ? 'Showing Cruise Crew Only' : 'Show Cruise Crew'}
+                                {filterCruise && data.channels.filter(c => c.onCruise).length > 0 &&
+                                    ` (${data.channels.filter(c => c.onCruise).length} channels)`
+                                }
+                            </button>
+                        </div>
 
                         {/* Channel Grid */}
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
