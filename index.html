@@ -32,6 +32,34 @@
         .expand-leaderboard { animation: slideDownLeaderboard 0.3s ease forwards; overflow-y: auto; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
         .pulse-glow { animation: pulse 2s ease-in-out infinite; }
+        .cruise-ship {
+    position: fixed;
+    bottom: 24px;
+    font-size: 2.5rem;
+    animation: cruiseSail 25s linear infinite;
+    z-index: 40;
+    pointer-events: none;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+}
+@keyframes cruiseSail {
+    0%   { left: -80px; }
+    100% { left: calc(100% + 80px); }
+}
+.cruise-waves {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    z-index: 39;
+    pointer-events: none;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 60'%3E%3Cpath d='M0,30 C150,60 350,0 600,30 C850,60 1050,0 1200,30 L1200,60 L0,60 Z' fill='%230ea5e9' fill-opacity='0.15'/%3E%3C/svg%3E") repeat-x;
+    animation: wave 8s linear infinite;
+}
+@keyframes wave {
+    0% { background-position: 0 0; }
+    100% { background-position: 1200px 0; }
+}
     </style>
 </head>
 <body class="text-white">
@@ -115,7 +143,7 @@
             const [sortBy, setSortBy] = React.useState('subscribers');
             const [selectedChannel, setSelectedChannel] = React.useState(null);
             const [leaderboardExpanded, setLeaderboardExpanded] = React.useState(false);
-
+            const [filterCruise, setFilterCruise] = React.useState(false);
             React.useEffect(() => {
                 fetch(CONFIG.APPS_SCRIPT_URL)
                     .then(res => res.json())
@@ -151,23 +179,24 @@
             }
 
             const filteredChannels = data.channels
-                .filter(c => {
-                    const matchesSearch = c.channelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                        c.friend.toLowerCase().includes(searchTerm.toLowerCase());
-                    const matchesFilter = filterStatus === 'all' ||
-                                        (filterStatus === 'monetized' && c.isMonetized) ||
-                                        (filterStatus === 'mature' && c.isMature) ||
-                                        (filterStatus === 'active' && c.status === 'Active');
-                    return matchesSearch && matchesFilter;
-                })
-                .sort((a, b) => {
-                    if (sortBy === 'subscribers') return b.subscribers - a.subscribers;
-                    if (sortBy === 'views') return b.views - a.views;
-                    if (sortBy === 'videos') return b.videos - a.videos;
-                    if (sortBy === 'growth') return b.weekGrowth - a.weekGrowth;
-                    if (sortBy === 'momentum') return b.momentumScore - a.momentumScore;
-                    return 0;
-                });
+    .filter(c => {
+        const matchesSearch = c.channelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            c.friend.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesFilter = filterStatus === 'all' ||
+                            (filterStatus === 'monetized' && c.isMonetized) ||
+                            (filterStatus === 'mature' && c.isMature) ||
+                            (filterStatus === 'active' && c.status === 'Active');
+        const matchesCruise = !filterCruise || c.onCruise === true;
+        return matchesSearch && matchesFilter && matchesCruise;
+    })
+    .sort((a, b) => {
+        if (sortBy === 'subscribers') return b.subscribers - a.subscribers;
+        if (sortBy === 'views') return b.views - a.views;
+        if (sortBy === 'videos') return b.videos - a.videos;
+        if (sortBy === 'growth') return b.weekGrowth - a.weekGrowth;
+        if (sortBy === 'momentum') return b.momentumScore - a.momentumScore;
+        return 0;
+    });
 
             return (
                 <div className="min-h-screen p-4 md:p-8">
@@ -456,33 +485,57 @@
                                         type="text"
                                         placeholder="Search channels or creators..."
                                         className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-cyan-400 transition-colors"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                </div>
-                                <select
-                                    className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-400 transition-colors"
-                                    value={filterStatus}
-                                    onChange={(e) => setFilterStatus(e.target.value)}
-                                >
-                                    <option value="all">All Channels</option>
-                                    <option value="monetized">Monetized Only</option>
-                                    <option value="mature">Mature Channels</option>
-                                    <option value="active">Active Only</option>
-                                </select>
-                                <select
-                                    className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-400 transition-colors"
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value)}
-                                >
-                                    <option value="subscribers">Sort by Subscribers</option>
-                                    <option value="views">Sort by Views</option>
-                                    <option value="videos">Sort by Videos</option>
-                                    <option value="growth">Sort by Growth</option>
-                                    <option value="momentum">Sort by Momentum</option>
-                                </select>
-                            </div>
-                        </div>
+       {/* Search and Filters */}
+<div className="glass rounded-xl p-6 mb-6">
+    <div className="grid md:grid-cols-3 gap-4 mb-4">
+        <div className="relative">
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <Icons.Search />
+            </div>
+            <input
+                type="text"
+                placeholder="Search channels or creators..."
+                className="w-full bg-white/5 border border-white/10 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-cyan-400 transition-colors"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+        </div>
+        <select
+            className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-400 transition-colors"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+        >
+            <option value="all">All Channels</option>
+            <option value="monetized">Monetized Only</option>
+            <option value="mature">Mature Channels</option>
+            <option value="active">Active Only</option>
+        </select>
+        <select
+            className="bg-white/5 border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-cyan-400 transition-colors"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+        >
+            <option value="subscribers">Sort by Subscribers</option>
+            <option value="views">Sort by Views</option>
+            <option value="videos">Sort by Videos</option>
+            <option value="growth">Sort by Growth</option>
+            <option value="momentum">Sort by Momentum</option>
+        </select>
+    </div>
+    <button
+        onClick={() => setFilterCruise(!filterCruise)}
+        className={`w-full py-2 rounded-lg font-semibold transition-all duration-300 border ${
+            filterCruise
+                ? 'bg-sky-500/20 border-sky-400 text-sky-300 shadow-lg shadow-sky-500/20'
+                : 'bg-white/5 border-white/10 text-gray-400 hover:border-sky-400/50 hover:text-sky-400'
+        }`}
+    >
+        🚢 {filterCruise ? 'Showing Cruise Crew Only' : 'Show Cruise Crew'}
+        {filterCruise && data.channels.filter(c => c.onCruise).length > 0 &&
+            ` (${data.channels.filter(c => c.onCruise).length} channels)`
+        }
+    </button>
+</div>
 
                         {/* Channel Grid */}
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
@@ -512,6 +565,11 @@
                                                         Active
                                                     </span>
                                                 )}
+                                                {channel.onCruise && (
+    <span className="tag bg-sky-500/20 text-sky-400 border border-sky-500/30">
+        🚢 Cruise
+    </span>
+)}
                                             </div>
                                         </div>
                                     </div>
@@ -548,7 +606,13 @@
                     </div>
 
                     {/* Channel Detail Modal */}
-                    {selectedChannel && (
+     {/* Cruise ship animation */}
+{filterCruise && (
+    <>
+        <div className="cruise-waves"></div>
+        <div className="cruise-ship">🚢</div>
+    </>
+)}               {selectedChannel && (
                         <ChannelModal channel={selectedChannel} onClose={() => setSelectedChannel(null)} />
                     )}
                 </div>
