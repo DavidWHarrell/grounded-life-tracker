@@ -327,18 +327,20 @@
       starsEl.appendChild(s);
     }
 
-    // ===== LOAD CHANNELS =====
-    async function loadChannels() {
-      try {
-        const res = await fetch(SCRIPT_URL);
-        const data = await res.json();
+ async function loadChannels() {
+    try {
+        const res = await fetch(SCRIPT_URL + '?nocache=' + Date.now(), {
+            redirect: 'follow'
+        });
+        const text = await res.text();
+        const data = JSON.parse(text);
         allChannels = data.channels.sort((a, b) => a.channelName.localeCompare(b.channelName));
         renderChannels(allChannels);
-      } catch (err) {
+    } catch (err) {
         document.getElementById('channelList').innerHTML =
-          '<div class="loading" style="color:#fca5a5">Failed to load channels. Please refresh.</div>';
-      }
+            '<div class="loading" style="color:#fca5a5">Failed to load channels: ' + err.message + '</div>';
     }
+}
 
     function renderChannels(channels) {
       const list = document.getElementById('channelList');
