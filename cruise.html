@@ -395,36 +395,33 @@
 
     // ===== SUBMIT =====
     async function submitRegistration() {
-      if (!selectedChannelId) return;
-      const btn = document.getElementById('submitBtn');
-      const statusEl = document.getElementById('status');
-      btn.disabled = true;
-      btn.textContent = 'Registering... ⏳';
-      statusEl.className = 'status';
+    if (!selectedChannelId) return;
+    const btn = document.getElementById('submitBtn');
+    const statusEl = document.getElementById('status');
+    btn.disabled = true;
+    btn.textContent = 'Registering... ⏳';
+    statusEl.className = 'status';
 
-      try {
-        const res = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          body: JSON.stringify({ action: 'setCruise', channelId: selectedChannelId, value: true })
-        });
+    try {
+        const url = SCRIPT_URL + '?action=setCruise&channelId=' + encodeURIComponent(selectedChannelId) + '&value=true';
+        const res = await fetch(url);
         const data = await res.json();
-        if (data.success) {
-          statusEl.className = 'status success';
-          statusEl.textContent = '🎉 ' + data.channelName + ' is on the cruise list! See you on the ship!';
-          btn.textContent = '✓ Registered!';
-          // Update local state
-          const ch = allChannels.find(c => c.channelId === selectedChannelId);
-          if (ch) ch.onCruise = true;
+        if (data.cruiseSet) {
+            statusEl.className = 'status success';
+            statusEl.textContent = '🎉 ' + data.channelName + ' is on the cruise list! See you on the ship!';
+            btn.textContent = '✓ Registered!';
+            const ch = allChannels.find(c => c.channelId === selectedChannelId);
+            if (ch) ch.onCruise = true;
         } else {
-          throw new Error(data.error || 'Unknown error');
+            throw new Error(data.error || 'Unknown error');
         }
-      } catch (err) {
+    } catch (err) {
         statusEl.className = 'status error';
         statusEl.textContent = '❌ Something went wrong: ' + err.message;
         btn.disabled = false;
         btn.textContent = '🚢 I\'m Going on the Cruise!';
-      }
     }
+}
 
     loadChannels();
   </script>
