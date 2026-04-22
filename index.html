@@ -522,7 +522,7 @@
                                         : 'bg-white/5 border-white/10 text-gray-400 hover:border-sky-400/50 hover:text-sky-400'
                                 }`}
                             >
-                                <img src="cruise-ship.png" alt="cruise ship" style={{height: '80px', width: 'auto'}} /> {filterCruise ? 'Showing Cruise Crew Only' : 'Show Cruise Crew'}
+                                 🛳️ {filterCruise ? 'Showing Cruise Crew Only' : 'Show Cruise Crew'}
                                 {filterCruise && data.channels.filter(c => c.onCruise).length > 0 &&
                                     ` (${data.channels.filter(c => c.onCruise).length} channels)`
                                 }
@@ -559,8 +559,8 @@
                                                 )}
                                                 {channel.onCruise && (
     <span className="tag bg-sky-500/20 text-sky-400 border border-sky-500/30">
-        <img src="cruise-ship.png" alt="cruise ship" style={{height: '80px', width: 'auto'}} /> Cruise
-    </span>
+    🛳️ Cruise
+</span>
 )}
                                             </div>
                                         </div>
