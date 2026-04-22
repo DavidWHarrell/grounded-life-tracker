@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🚢 Grounded Life Cruise 2026</title>
+  <title 🛳️ Grounded Life Cruise 2026</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -274,7 +274,7 @@
     <div class="wave"></div>
     <div class="wave wave2"></div>
   </div>
-  <div class="ship">🚢</div>
+  <div class="ship"> 🛳️</div>
 
   <div class="container">
     <div class="header">
@@ -299,7 +299,7 @@
     </div>
 
     <button class="btn btn-primary" id="submitBtn" onclick="submitRegistration()" disabled>
-      🚢 I'm Going on the Cruise!
+       🛳️ I'm Going on the Cruise!
     </button>
 
     <div class="status" id="status"></div>
@@ -402,7 +402,7 @@ function updateSelectedPreview() {
     if (selected.length === 0) {
         preview.classList.remove('visible');
         btn.disabled = true;
-        btn.textContent = '🚢 I\'m Going on the Cruise!';
+        btn.textContent = ' 🛳️ I\'m Going on the Cruise!';
     } else {
         preview.classList.add('visible');
         document.getElementById('selectedImg').src = selected[0].thumbnailUrl;
@@ -410,7 +410,7 @@ function updateSelectedPreview() {
             ? selected[0].channelName
             : selected.length + ' channels selected';
         btn.disabled = false;
-        btn.textContent = `🚢 Register ${selected.length} Channel${selected.length > 1 ? 's' : ''} for the Cruise!`;
+        btn.textContent = ` 🛳️ Register ${selected.length} Channel${selected.length > 1 ? 's' : ''} for the Cruise!`;
     }
 }
     function updateSelection(ch) {
@@ -460,7 +460,7 @@ function updateSelectedPreview() {
         statusEl.className = 'status error';
         statusEl.textContent = '❌ Something went wrong: ' + err.message;
         btn.disabled = false;
-        btn.textContent = '🚢 I\'m Going on the Cruise!';
+        btn.textContent = ' 🛳️ I\'m Going on the Cruise!';
     }
 }
     loadChannels();
