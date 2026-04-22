@@ -32,19 +32,22 @@
         .expand-leaderboard { animation: slideDownLeaderboard 0.3s ease forwards; overflow-y: auto; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
         .pulse-glow { animation: pulse 2s ease-in-out infinite; }
-      .cruise-ship {
+     .cruise-ship {
     position: fixed;
-    bottom: 24px;
+    bottom: 70px;
     left: 0;
+    width: 60px;
+    text-align: center;
     font-size: 2.5rem;
     animation: cruiseSail 25s linear infinite;
-    z-index: 40;
+    z-index: 9999;
     pointer-events: none;
     filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
 }
 @keyframes cruiseSail {
     0%   { transform: translateX(-80px); }
     100% { transform: translateX(calc(100vw + 80px)); }
+}
 }.cruise-waves {
     position: fixed;
     bottom: 0;
