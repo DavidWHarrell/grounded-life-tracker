@@ -6,7 +6,6 @@
   <title>🛳️ Grounded Life Cruise 2026</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: linear-gradient(180deg, #0a1628 0%, #0d2b4e 40%, #1a5276 100%);
@@ -14,264 +13,58 @@
       color: #e2e8f0;
       overflow-x: hidden;
     }
-
-    .ocean {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 120px;
-      z-index: 0;
-      pointer-events: none;
-    }
-    .wave {
-      position: absolute;
-      bottom: 0;
-      width: 200%;
-      height: 80px;
-      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 80'%3E%3Cpath d='M0,40 C150,80 350,0 600,40 C850,80 1050,0 1200,40 L1200,80 L0,80 Z' fill='%23164e7a' fill-opacity='0.6'/%3E%3C/svg%3E") repeat-x;
-      animation: wave 8s linear infinite;
-    }
-    .wave2 {
-      bottom: 10px;
-      background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 80'%3E%3Cpath d='M0,50 C200,10 400,70 600,50 C800,30 1000,70 1200,50 L1200,80 L0,80 Z' fill='%231a6090' fill-opacity='0.4'/%3E%3C/svg%3E") repeat-x;
-      animation: wave 12s linear infinite reverse;
-    }
-    @keyframes wave {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-
-    .ship {
-      position: fixed;
-      bottom: 70px;
-      left: 0;
-      animation: sail 30s linear infinite;
-      z-index: 9999;
-      pointer-events: none;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
-    }
-    @keyframes sail {
-      0%   { transform: translateX(-150px); }
-      100% { transform: translateX(calc(100vw + 150px)); }
-    }
-
-    .stars {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 60%;
-      pointer-events: none;
-      z-index: 0;
-    }
-    .star {
-      position: absolute;
-      background: white;
-      border-radius: 50%;
-      animation: twinkle 3s infinite alternate;
-    }
-    @keyframes twinkle {
-      0% { opacity: 0.2; } 100% { opacity: 1; }
-    }
-
-    .container {
-      position: relative;
-      z-index: 2;
-      max-width: 640px;
-      margin: 0 auto;
-      padding: 40px 20px 160px;
-    }
-
-    .header {
-      text-align: center;
-      margin-bottom: 36px;
-    }
+    .ocean { position: fixed; bottom: 0; left: 0; width: 100%; height: 120px; z-index: 0; pointer-events: none; }
+    .wave { position: absolute; bottom: 0; width: 200%; height: 80px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 80'%3E%3Cpath d='M0,40 C150,80 350,0 600,40 C850,80 1050,0 1200,40 L1200,80 L0,80 Z' fill='%23164e7a' fill-opacity='0.6'/%3E%3C/svg%3E") repeat-x; animation: wave 8s linear infinite; }
+    .wave2 { bottom: 10px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 80'%3E%3Cpath d='M0,50 C200,10 400,70 600,50 C800,30 1000,70 1200,50 L1200,80 L0,80 Z' fill='%231a6090' fill-opacity='0.4'/%3E%3C/svg%3E") repeat-x; animation: wave 12s linear infinite reverse; }
+    @keyframes wave { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .ship { position: fixed; bottom: 70px; left: 0; animation: sail 30s linear infinite; z-index: 9999; pointer-events: none; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4)); }
+    @keyframes sail { 0% { transform: translateX(-150px); } 100% { transform: translateX(calc(100vw + 150px)); } }
+    .stars { position: fixed; top: 0; left: 0; width: 100%; height: 60%; pointer-events: none; z-index: 0; }
+    .star { position: absolute; background: white; border-radius: 50%; animation: twinkle 3s infinite alternate; }
+    @keyframes twinkle { 0% { opacity: 0.2; } 100% { opacity: 1; } }
+    .container { position: relative; z-index: 2; max-width: 640px; margin: 0 auto; padding: 40px 20px 160px; }
+    .header { text-align: center; margin-bottom: 36px; }
     .header .emoji { font-size: 3.5rem; display: block; margin-bottom: 12px; }
-    .header h1 {
-      font-size: 2rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, #7dd3fc, #38bdf8, #0ea5e9);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 8px;
-    }
+    .header h1 { font-size: 2rem; font-weight: 700; background: linear-gradient(135deg, #7dd3fc, #38bdf8, #0ea5e9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px; }
     .header p { color: #94a3b8; font-size: 1rem; line-height: 1.6; }
-
-    .card {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 16px;
-      padding: 28px;
-      backdrop-filter: blur(12px);
-      margin-bottom: 16px;
-    }
-
-    .card label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #7dd3fc;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 10px;
-    }
-
+    .card { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 28px; backdrop-filter: blur(12px); margin-bottom: 16px; }
+    .card label { display: block; font-size: 0.85rem; font-weight: 600; color: #7dd3fc; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
     .search-wrap { position: relative; margin-bottom: 12px; }
-    .search-wrap input {
-      width: 100%;
-      padding: 12px 16px 12px 42px;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 10px;
-      color: #e2e8f0;
-      font-size: 0.95rem;
-      outline: none;
-      transition: border-color 0.2s;
-    }
+    .search-wrap input { width: 100%; padding: 12px 16px 12px 42px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: #e2e8f0; font-size: 0.95rem; outline: none; transition: border-color 0.2s; }
     .search-wrap input:focus { border-color: #38bdf8; }
     .search-wrap input::placeholder { color: #64748b; }
-    .search-icon {
-      position: absolute;
-      left: 14px; top: 50%;
-      transform: translateY(-50%);
-      color: #64748b;
-      font-size: 1rem;
-    }
-
-    .channel-list {
-      max-height: 320px;
-      overflow-y: auto;
-      border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.1);
-    }
+    .search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-size: 1rem; }
+    .channel-list { max-height: 320px; overflow-y: auto; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); }
     .channel-list::-webkit-scrollbar { width: 6px; }
-    .channel-list::-webkit-scrollbar-track { background: transparent; }
     .channel-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
-
-    .channel-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 14px;
-      cursor: pointer;
-      transition: background 0.15s;
-      border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
+    .channel-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; cursor: pointer; transition: background 0.15s; border-bottom: 1px solid rgba(255,255,255,0.05); }
     .channel-item:last-child { border-bottom: none; }
     .channel-item:hover { background: rgba(56,189,248,0.1); }
     .channel-item.selected { background: rgba(56,189,248,0.18); }
-
-    .channel-item img.thumb {
-      width: 36px; height: 36px;
-      border-radius: 50%;
-      object-fit: cover;
-      flex-shrink: 0;
-      background: #1e3a5f;
-    }
+    .channel-item img.thumb { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0; background: #1e3a5f; }
     .channel-info { flex: 1; min-width: 0; }
-    .channel-name {
-      font-size: 0.9rem;
-      font-weight: 500;
-      color: #e2e8f0;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .channel-name { font-size: 0.9rem; font-weight: 500; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .channel-friend { font-size: 0.78rem; color: #64748b; }
-    .channel-check {
-      width: 20px; height: 20px;
-      border: 2px solid rgba(255,255,255,0.25);
-      border-radius: 50%;
-      flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-      transition: all 0.2s;
-      font-size: 0.75rem;
-    }
-    .channel-item.selected .channel-check {
-      background: #38bdf8;
-      border-color: #38bdf8;
-      color: #0a1628;
-    }
-
-    .selected-preview {
-      display: none;
-      background: rgba(56,189,248,0.1);
-      border: 1px solid rgba(56,189,248,0.3);
-      border-radius: 10px;
-      padding: 12px 16px;
-      margin-top: 12px;
-      font-size: 0.9rem;
-      color: #7dd3fc;
-      align-items: center;
-      gap: 10px;
-    }
+    .channel-check { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.25); border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.2s; font-size: 0.75rem; }
+    .channel-item.selected .channel-check { background: #38bdf8; border-color: #38bdf8; color: #0a1628; }
+    .selected-preview { display: none; background: rgba(56,189,248,0.1); border: 1px solid rgba(56,189,248,0.3); border-radius: 10px; padding: 12px 16px; margin-top: 12px; font-size: 0.9rem; color: #7dd3fc; align-items: center; gap: 10px; }
     .selected-preview.visible { display: flex; }
     .selected-preview img { width: 28px; height: 28px; border-radius: 50%; }
-
-    .btn {
-      width: 100%;
-      padding: 14px;
-      border: none;
-      border-radius: 12px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s;
-      letter-spacing: 0.02em;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, #0ea5e9, #0284c7);
-      color: white;
-      box-shadow: 0 4px 20px rgba(14,165,233,0.3);
-    }
-    .btn-primary:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 24px rgba(14,165,233,0.45);
-    }
+    .btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .btn-primary { background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; box-shadow: 0 4px 20px rgba(14,165,233,0.3); }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(14,165,233,0.45); }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-    .status {
-      margin-top: 16px;
-      padding: 14px 18px;
-      border-radius: 10px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      text-align: center;
-      display: none;
-    }
-    .status.success {
-      display: block;
-      background: rgba(34,197,94,0.15);
-      border: 1px solid rgba(34,197,94,0.3);
-      color: #86efac;
-    }
-    .status.error {
-      display: block;
-      background: rgba(239,68,68,0.15);
-      border: 1px solid rgba(239,68,68,0.3);
-      color: #fca5a5;
-    }
-
+    .status { margin-top: 16px; padding: 14px 18px; border-radius: 10px; font-size: 0.9rem; font-weight: 500; text-align: center; display: none; }
+    .status.success { display: block; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+    .status.error { display: block; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
     .loading { text-align: center; color: #64748b; padding: 24px; }
     .already-on { font-size: 0.8rem; color: #38bdf8; margin-left: 4px; }
-
-    .note {
-      text-align: center;
-      font-size: 0.8rem;
-      color: #475569;
-      margin-top: 20px;
-      line-height: 1.6;
-    }
+    .note { text-align: center; font-size: 0.8rem; color: #475569; margin-top: 20px; line-height: 1.6; }
   </style>
 </head>
 <body>
 
   <div class="stars" id="stars"></div>
-
   <div class="ocean">
     <div class="wave"></div>
     <div class="wave wave2"></div>
@@ -324,7 +117,7 @@
       const s = document.createElement('div');
       s.className = 'star';
       const size = Math.random() * 2.5 + 0.5;
-      s.style.cssText = `width:${size}px;height:${size}px;top:${Math.random()*100}%;left:${Math.random()*100}%;animation-delay:${Math.random()*3}s;animation-duration:${2+Math.random()*3}s`;
+      s.style.cssText = 'width:' + size + 'px;height:' + size + 'px;top:' + (Math.random()*100) + '%;left:' + (Math.random()*100) + '%;animation-delay:' + (Math.random()*3) + 's;animation-duration:' + (2+Math.random()*3) + 's';
       starsEl.appendChild(s);
     }
 
@@ -333,7 +126,7 @@
         const res = await fetch(SCRIPT_URL + '?nocache=' + Date.now(), { redirect: 'follow' });
         const text = await res.text();
         const data = JSON.parse(text);
-        allChannels = data.channels.sort((a, b) => a.channelName.localeCompare(b.channelName));
+        allChannels = data.channels.sort(function(a, b) { return a.channelName.localeCompare(b.channelName); });
         renderChannels(allChannels);
       } catch (err) {
         document.getElementById('channelList').innerHTML =
@@ -347,27 +140,27 @@
         list.innerHTML = '<div class="loading">No channels found</div>';
         return;
       }
-      list.innerHTML = channels.map(ch => `
-        <div class="channel-item${(ch.onCruise || ch.selected) ? ' selected' : ''}" onclick="selectChannel('${ch.channelId}')" id="item-${ch.channelId}">
-          <img class="thumb" src="${ch.thumbnailUrl}" alt="" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 36 36%22><rect width=%2236%22 height=%2236%22 rx=%2218%22 fill=%22%231e3a5f%22/></svg>'">
-          <div class="channel-info">
-            <div class="channel-name">${ch.channelName}${ch.onCruise ? '<span class="already-on">✓ Registered</span>' : ''}</div>
-            <div class="channel-friend">${ch.friend}</div>
-          </div>
-          <div class="channel-check" id="check-${ch.channelId}">${(ch.onCruise || ch.selected) ? '✓' : ''}</div>
-        </div>
-      `).join('');
+      list.innerHTML = channels.map(function(ch) {
+        return '<div class="channel-item' + ((ch.onCruise || ch.selected) ? ' selected' : '') + '" onclick="selectChannel(\'' + ch.channelId + '\')" id="item-' + ch.channelId + '">' +
+          '<img class="thumb" src="' + ch.thumbnailUrl + '" alt="">' +
+          '<div class="channel-info">' +
+            '<div class="channel-name">' + ch.channelName + (ch.onCruise ? '<span class="already-on">✓ Registered</span>' : '') + '</div>' +
+            '<div class="channel-friend">' + ch.friend + '</div>' +
+          '</div>' +
+          '<div class="channel-check" id="check-' + ch.channelId + '">' + ((ch.onCruise || ch.selected) ? '✓' : '') + '</div>' +
+        '</div>';
+      }).join('');
     }
 
     function filterChannels() {
       const q = document.getElementById('search').value.toLowerCase();
-      renderChannels(allChannels.filter(ch =>
-        ch.channelName.toLowerCase().includes(q) || ch.friend.toLowerCase().includes(q)
-      ));
+      renderChannels(allChannels.filter(function(ch) {
+        return ch.channelName.toLowerCase().includes(q) || ch.friend.toLowerCase().includes(q);
+      }));
     }
 
     function selectChannel(channelId) {
-      const ch = allChannels.find(c => c.channelId === channelId);
+      const ch = allChannels.find(function(c) { return c.channelId === channelId; });
       if (!ch) return;
       ch.selected = !ch.selected;
       const item = document.getElementById('item-' + channelId);
@@ -378,7 +171,7 @@
     }
 
     function updateSelectedPreview() {
-      const selected = allChannels.filter(c => c.selected);
+      const selected = allChannels.filter(function(c) { return c.selected; });
       const preview = document.getElementById('selectedPreview');
       const btn = document.getElementById('submitBtn');
       if (selected.length === 0) {
@@ -388,35 +181,37 @@
       } else {
         preview.classList.add('visible');
         document.getElementById('selectedImg').src = selected[0].thumbnailUrl;
-        document.getElementById('selectedName').textContent = selected.length === 1
-          ? selected[0].channelName
-          : selected.length + ' channels selected';
+        document.getElementById('selectedName').textContent = selected.length === 1 ? selected[0].channelName : selected.length + ' channels selected';
         btn.disabled = false;
-        btn.innerHTML = `<img src="cruise-ship.png" alt="" style="height:20px;width:auto;vertical-align:middle;"> Register ${selected.length} Channel${selected.length > 1 ? 's' : ''} for the Cruise!`;
+        btn.innerHTML = '<img src="cruise-ship.png" alt="" style="height:20px;width:auto;vertical-align:middle;"> Register ' + selected.length + ' Channel' + (selected.length > 1 ? 's' : '') + ' for the Cruise!';
       }
     }
 
     async function submitRegistration() {
-      const selected = allChannels.filter(c => c.selected);
+      const selected = allChannels.filter(function(c) { return c.selected; });
       if (selected.length === 0) return;
       const btn = document.getElementById('submitBtn');
       const statusEl = document.getElementById('status');
       btn.disabled = true;
       btn.innerHTML = 'Registering... ⏳';
       statusEl.className = 'status';
-for (const ch of selected) {
-    const url = SCRIPT_URL + '?action=setCruise&channelId=' + encodeURIComponent(ch.channelId) + '&value=true';
-    const res = await fetch(url);
-    const text = await res.text();
-    console.log('Response for ' + ch.channelName + ':', text);
-    const data = JSON.parse(text);
-    console.log('Parsed:', data);
-    if (data.cruiseSet) {
-        ch.onCruise = true;
-        ch.selected = false;
-        results.push(ch.channelName);
-    }
-}
+      try {
+        const results = [];
+        for (let i = 0; i < selected.length; i++) {
+          const ch = selected[i];
+          const url = SCRIPT_URL + '?action=setCruise&channelId=' + encodeURIComponent(ch.channelId) + '&value=true';
+          const res = await fetch(url);
+          const text = await res.text();
+          console.log('Response for ' + ch.channelName + ':', text);
+          let data;
+          try { data = JSON.parse(text); } catch(pe) { console.log('Parse error:', pe); continue; }
+          console.log('Parsed:', data);
+          if (data.cruiseSet) {
+            ch.onCruise = true;
+            ch.selected = false;
+            results.push(ch.channelName);
+          }
+        }
         if (results.length > 0) {
           statusEl.className = 'status success';
           statusEl.textContent = '🎉 Registered: ' + results.join(', ') + ' — See you on the ship!';
