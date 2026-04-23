@@ -404,18 +404,19 @@
       btn.disabled = true;
       btn.innerHTML = 'Registering... ⏳';
       statusEl.className = 'status';
-      try {
-        const results = [];
-        for (const ch of selected) {
-          const url = SCRIPT_URL + '?action=setCruise&channelId=' + encodeURIComponent(ch.channelId) + '&value=true';
-          const res = await fetch(url);
-          const data = await res.json();
-          if (data.cruiseSet) {
-            ch.onCruise = true;
-            ch.selected = false;
-            results.push(ch.channelName);
-          }
-        }
+for (const ch of selected) {
+    const url = SCRIPT_URL + '?action=setCruise&channelId=' + encodeURIComponent(ch.channelId) + '&value=true';
+    const res = await fetch(url);
+    const text = await res.text();
+    console.log('Response for ' + ch.channelName + ':', text);
+    const data = JSON.parse(text);
+    console.log('Parsed:', data);
+    if (data.cruiseSet) {
+        ch.onCruise = true;
+        ch.selected = false;
+        results.push(ch.channelName);
+    }
+}
         if (results.length > 0) {
           statusEl.className = 'status success';
           statusEl.textContent = '🎉 Registered: ' + results.join(', ') + ' — See you on the ship!';
