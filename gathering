@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grounded Life — Gathering Registration</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { font-family: 'Outfit', sans-serif; box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .card {
+            background: rgba(15,23,42,0.95);
+            backdrop-filter: blur(40px);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 480px;
+            width: 100%;
+        }
+        .icon-large { font-size: 3rem; text-align: center; margin-bottom: 8px; }
+        h1 { font-size: 1.5rem; text-align: center; margin: 0 0 4px; }
+        .subtitle { text-align: center; color: #94a3b8; font-size: 0.9rem; margin-bottom: 24px; }
+        label { display: block; font-size: 0.85rem; color: #94a3b8; margin-bottom: 6px; margin-top: 16px; }
+        select, input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: #fff;
+            font-size: 1rem;
+        }
+        select:focus, input:focus { outline: none; border-color: #22d3ee; }
+        button {
+            width: 100%;
+            margin-top: 24px;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #22d3ee, #a855f7);
+            color: #0f172a;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        button:not(:disabled):hover { opacity: 0.9; }
+        .status { margin-top: 16px; text-align: center; font-size: 0.9rem; padding: 10px; border-radius: 8px; }
+        .status.success { background: rgba(34,197,94,0.15); color: #4ade80; }
+        .status.error { background: rgba(239,68,68,0.15); color: #f87171; }
+        .status.info { background: rgba(34,211,238,0.1); color: #67e8f9; }
+        .loading-spinner {
+            width: 40px; height: 40px;
+            border: 4px solid rgba(34,211,238,0.2);
+            border-top-color: #22d3ee;
+            border-radius: 50%;
+            margin: 0 auto 16px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .center { text-align: center; }
+        .gathering-meta { text-align: center; color: #94a3b8; font-size: 0.85rem; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="card" id="card">
+        <div class="center" id="loadingState">
+            <div class="loading-spinner"></div>
+            <p style="color: #94a3b8;">Loading...</p>
+        </div>
+    </div>
+
+    <script>
+        // This single page works for ANY gathering — it automatically detects
+        // whichever gathering currently has Status "active" in the Gatherings
+        // sheet and builds the registration form around it. No per-trip HTML
+        // file is ever needed again.
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6uXFFccCBACibjsgMgadNqJzwJ4C2VMlfU1vv0IgtK2GEsi6GQLtsFlHl7GvtMAR9/exec';
+
+        const card = document.getElementById('card');
+
+        function render(html) {
+            card.innerHTML = html;
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        async function init() {
+            try {
+                const res = await fetch(SCRIPT_URL);
+                const data = await res.json();
+
+                const gatherings = data.gatherings || [];
+                const active = gatherings.find(g => g.status === 'active');
+
+                if (!active) {
+                    render(`
+                        <div class="center">
+                            <div class="icon-large">🗓️</div>
+                            <h1>No Active Gathering</h1>
+                            <p class="subtitle">There isn't a community gathering open for registration right now. Check back soon!</p>
+                        </div>
+                    `);
+                    return;
+                }
+
+                const channels = (data.channels || []).slice().sort((a, b) =>
+                    a.channelName.localeCompare(b.channelName)
+                );
+
+                const registeredIds = new Set(active.participantChannelIds || []);
+
+                const options = channels.map(c =>
+                    `<option value="${escapeHtml(c.channelId)}">${escapeHtml(c.channelName)} (${escapeHtml(c.friend)})${registeredIds.has(c.channelId) ? ' ✓ Registered' : ''}</option>`
+                ).join('');
+
+                render(`
+                    <div class="icon-large">${active.icon || '🎉'}</div>
+                    <h1>${escapeHtml(active.name)}</h1>
+                    <div class="gathering-meta">
+                        ${active.location ? escapeHtml(active.location) : ''}
+                        ${active.location && (active.startDate || active.endDate) ? ' · ' : ''}
+                        ${active.startDate ? escapeHtml(active.startDate) : ''}${active.startDate && active.endDate ? ' – ' : ''}${active.endDate ? escapeHtml(active.endDate) : ''}
+                    </div>
+                    <label for="channelSelect">Which channel are you?</label>
+                    <select id="channelSelect">
+                        <option value="">Select your channel...</option>
+                        ${options}
+                    </select>
+                    <button id="registerBtn" disabled>${active.icon || '🎉'} I'm Going!</button>
+                    <button id="unregisterBtn" disabled style="margin-top: 8px; background: rgba(255,255,255,0.05); color: #94a3b8;">Remove My Registration</button>
+                    <div id="statusMsg"></div>
+                `);
+
+                const select = document.getElementById('channelSelect');
+                const registerBtn = document.getElementById('registerBtn');
+                const unregisterBtn = document.getElementById('unregisterBtn');
+                const statusMsg = document.getElementById('statusMsg');
+
+                select.addEventListener('change', () => {
+                    const has = !!select.value;
+                    registerBtn.disabled = !has;
+                    unregisterBtn.disabled = !has;
+                    statusMsg.innerHTML = '';
+                });
+
+                async function setParticipant(participantAction) {
+                    const channelId = select.value;
+                    if (!channelId) return;
+
+                    registerBtn.disabled = true;
+                    unregisterBtn.disabled = true;
+                    statusMsg.innerHTML = `<div class="status info">Saving...</div>`;
+
+                    try {
+                        const url = SCRIPT_URL +
+                            '?action=setGatheringParticipant' +
+                            '&gatheringId=' + encodeURIComponent(active.gatheringId) +
+                            '&channelId=' + encodeURIComponent(channelId) +
+                            '&participantAction=' + encodeURIComponent(participantAction);
+
+                        const res = await fetch(url);
+                        const result = await res.json();
+
+                        if (result.success) {
+                            statusMsg.innerHTML = participantAction === 'remove'
+                                ? `<div class="status success">✓ Removed your registration. See you next time!</div>`
+                                : `<div class="status success">✓ You're registered for ${escapeHtml(active.name)}! ${active.icon || '🎉'}</div>`;
+                        } else {
+                            statusMsg.innerHTML = `<div class="status error">❌ ${escapeHtml(result.error || 'Something went wrong')}</div>`;
+                        }
+                    } catch (err) {
+                        statusMsg.innerHTML = `<div class="status error">❌ Network error: ${escapeHtml(err.message)}</div>`;
+                    }
+
+                    registerBtn.disabled = false;
+                    unregisterBtn.disabled = false;
+                }
+
+                registerBtn.addEventListener('click', () => setParticipant('add'));
+                unregisterBtn.addEventListener('click', () => setParticipant('remove'));
+
+            } catch (err) {
+                render(`
+                    <div class="center">
+                        <div class="icon-large">⚠️</div>
+                        <h1>Couldn't Load</h1>
+                        <p class="subtitle">${escapeHtml(err.message)}</p>
+                    </div>
+                `);
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>
