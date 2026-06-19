@@ -32,37 +32,37 @@
         .expand-leaderboard { animation: slideDownLeaderboard 0.3s ease forwards; overflow-y: auto; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
         .pulse-glow { animation: pulse 2s ease-in-out infinite; }
-     .cruise-ship {
-    position: fixed;
-    bottom: 70px;
-    left: 0;
-    width: 60px;
-    text-align: center;
-    font-size: 2.5rem;
-    animation: cruiseSail 25s linear infinite;
-    z-index: 9999;
-    pointer-events: none;
-    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
-}
-@keyframes cruiseSail {
-    0%   { transform: translateX(-80px); }
-    100% { transform: translateX(calc(100vw + 80px)); }
-}
-.cruise-waves {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 60px;
-    z-index: 39;
-    pointer-events: none;
-    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 60'%3E%3Cpath d='M0,30 C150,60 350,0 600,30 C850,60 1050,0 1200,30 L1200,60 L0,60 Z' fill='%230ea5e9' fill-opacity='0.15'/%3E%3C/svg%3E") repeat-x;
-    animation: wave 8s linear infinite;
-}
-@keyframes wave {
-    0% { background-position: 0 0; }
-    100% { background-position: 1200px 0; }
-}
+        .gathering-icon-float {
+            position: fixed;
+            bottom: 70px;
+            left: 0;
+            width: 60px;
+            text-align: center;
+            font-size: 2.5rem;
+            animation: gatheringFloat 25s linear infinite;
+            z-index: 9999;
+            pointer-events: none;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+        }
+        @keyframes gatheringFloat {
+            0%   { transform: translateX(-80px); }
+            100% { transform: translateX(calc(100vw + 80px)); }
+        }
+        .gathering-waves {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            z-index: 39;
+            pointer-events: none;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 60'%3E%3Cpath d='M0,30 C150,60 350,0 600,30 C850,60 1050,0 1200,30 L1200,60 L0,60 Z' fill='%230ea5e9' fill-opacity='0.15'/%3E%3C/svg%3E") repeat-x;
+            animation: wave 8s linear infinite;
+        }
+        @keyframes wave {
+            0% { background-position: 0 0; }
+            100% { background-position: 1200px 0; }
+        }
     </style>
 </head>
 <body class="text-white">
@@ -146,7 +146,8 @@
             const [sortBy, setSortBy] = React.useState('subscribers');
             const [selectedChannel, setSelectedChannel] = React.useState(null);
             const [leaderboardExpanded, setLeaderboardExpanded] = React.useState(false);
-            const [filterCruise, setFilterCruise] = React.useState(false);
+            const [filterGatheringId, setFilterGatheringId] = React.useState(null);
+
             React.useEffect(() => {
                 fetch(CONFIG.APPS_SCRIPT_URL)
                     .then(res => res.json())
@@ -181,6 +182,9 @@
                 );
             }
 
+            const gatherings = data.gatherings || [];
+            const activeGathering = gatherings.find(g => g.status === 'active') || null;
+
             const filteredChannels = data.channels
     .filter(c => {
         const matchesSearch = c.channelName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -189,8 +193,8 @@
                             (filterStatus === 'monetized' && c.isMonetized) ||
                             (filterStatus === 'mature' && c.isMature) ||
                             (filterStatus === 'active' && c.status === 'Active');
-        const matchesCruise = !filterCruise || c.onCruise === true;
-        return matchesSearch && matchesFilter && matchesCruise;
+        const matchesGathering = !filterGatheringId || (c.gatheringIds || []).includes(filterGatheringId);
+        return matchesSearch && matchesFilter && matchesGathering;
     })
     .sort((a, b) => {
         if (sortBy === 'subscribers') return b.subscribers - a.subscribers;
@@ -398,7 +402,7 @@
                             )}
                         </div>
 
-                        {/* Upcoming Milestones - NEW! */}
+                        {/* Upcoming Milestones */}
                         {data.upcomingMilestones && data.upcomingMilestones.length > 0 && (
                             <div className="glass rounded-xl p-6 mb-8">
                                 <div className="flex items-center gap-2 mb-4">
@@ -514,19 +518,25 @@
                                     <option value="momentum">Sort by Momentum</option>
                                 </select>
                             </div>
-                            <button
-                                onClick={() => setFilterCruise(!filterCruise)}
-                                className={`w-full py-2 rounded-lg font-semibold transition-all duration-300 border ${
-                                    filterCruise
-                                        ? 'bg-sky-500/20 border-sky-400 text-sky-300 shadow-lg shadow-sky-500/20'
-                                        : 'bg-white/5 border-white/10 text-gray-400 hover:border-sky-400/50 hover:text-sky-400'
-                                }`}
-                            >
-                                 🛳️ {filterCruise ? 'Showing Cruise Crew Only' : 'Show Cruise Crew'}
-                                {filterCruise && data.channels.filter(c => c.onCruise).length > 0 &&
-                                    ` (${data.channels.filter(c => c.onCruise).length} channels)`
-                                }
-                            </button>
+
+                            {/* Generic active-gathering filter — only appears when a gathering is currently active */}
+                            {activeGathering && (
+                                <button
+                                    onClick={() => setFilterGatheringId(filterGatheringId === activeGathering.gatheringId ? null : activeGathering.gatheringId)}
+                                    className={`w-full py-2 rounded-lg font-semibold transition-all duration-300 border ${
+                                        filterGatheringId === activeGathering.gatheringId
+                                            ? 'bg-sky-500/20 border-sky-400 text-sky-300 shadow-lg shadow-sky-500/20'
+                                            : 'bg-white/5 border-white/10 text-gray-400 hover:border-sky-400/50 hover:text-sky-400'
+                                    }`}
+                                >
+                                    {activeGathering.icon} {filterGatheringId === activeGathering.gatheringId
+                                        ? `Showing ${activeGathering.name} Crew Only`
+                                        : `Show ${activeGathering.name} Crew`}
+                                    {filterGatheringId === activeGathering.gatheringId &&
+                                        ` (${activeGathering.participantChannelIds.length} channels)`
+                                    }
+                                </button>
+                            )}
                         </div>
 
                         {/* Channel Grid */}
@@ -546,7 +556,7 @@
                                         <div className="flex-1 min-w-0">
                                             <h3 className="font-bold truncate">{channel.channelName}</h3>
                                             <p className="text-sm text-gray-400 truncate">{channel.friend}</p>
-                                            <div className="flex gap-2 mt-1">
+                                            <div className="flex gap-2 mt-1 flex-wrap">
                                                 {channel.isMonetized && (
                                                     <span className="tag bg-green-500/20 text-green-400 border border-green-500/30">
                                                         ✓ Monetized
@@ -557,11 +567,16 @@
                                                         Active
                                                     </span>
                                                 )}
-                                                {channel.onCruise && (
-    <span className="tag bg-sky-500/20 text-sky-400 border border-sky-500/30">
-    🛳️ Cruise
-</span>
-)}
+                                                {/* Permanent historical badges — one per gathering this channel ever participated in */}
+                                                {(channel.gatheringIds || []).map((gid) => {
+                                                    const g = gatherings.find(gg => gg.gatheringId === gid);
+                                                    if (!g) return null;
+                                                    return (
+                                                        <span key={gid} className="tag bg-sky-500/20 text-sky-400 border border-sky-500/30" title={g.name}>
+                                                            {g.icon} {g.name}
+                                                        </span>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     </div>
@@ -597,21 +612,22 @@
                         </div>
                     </div>
 
-                    {/* Channel Detail Modal */}
-     {/* Cruise ship animation */}
-{filterCruise && (
-    <>
-        <div className="cruise-waves"></div>
-        <div className="cruise-ship"><img src="cruise-ship.png" alt="cruise ship" style={{height: '80px', width: 'auto'}} /></div>
-    </>
-)}               {selectedChannel && (
-                        <ChannelModal channel={selectedChannel} onClose={() => setSelectedChannel(null)} />
+                    {/* Generic active-gathering floating icon + waves — only renders when a gathering is active and its filter is on */}
+                    {activeGathering && filterGatheringId === activeGathering.gatheringId && (
+                        <>
+                            <div className="gathering-waves"></div>
+                            <div className="gathering-icon-float">{activeGathering.icon}</div>
+                        </>
+                    )}
+
+                    {selectedChannel && (
+                        <ChannelModal channel={selectedChannel} gatherings={gatherings} onClose={() => setSelectedChannel(null)} />
                     )}
                 </div>
             );
         }
 
-        function ChannelModal({ channel, onClose }) {
+        function ChannelModal({ channel, gatherings, onClose }) {
             const chartRef = React.useRef(null);
             const chartInstance = React.useRef(null);
 
@@ -675,6 +691,10 @@
                 };
             }, [channel]);
 
+            const channelGatherings = (channel.gatheringIds || [])
+                .map(gid => gatherings.find(g => g.gatheringId === gid))
+                .filter(Boolean);
+
             return (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 modal-backdrop" onClick={onClose}>
                     <div className="glass-strong rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto scrollbar-thin modal-content" onClick={(e) => e.stopPropagation()}>
@@ -712,6 +732,22 @@
                                     </a>
                                 </div>
                             </div>
+
+                            {/* Gatherings attended */}
+                            {channelGatherings.length > 0 && (
+                                <div className="glass rounded-lg p-4 mb-6">
+                                    <h3 className="font-bold mb-3 flex items-center gap-2">
+                                        <Icons.Calendar /> Community Gatherings Attended
+                                    </h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {channelGatherings.map(g => (
+                                            <span key={g.gatheringId} className="tag bg-sky-500/20 text-sky-400 border border-sky-500/30 text-sm py-1 px-3" title={g.location}>
+                                                {g.icon} {g.name}{g.location ? ` — ${g.location}` : ''}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Stats Grid */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
